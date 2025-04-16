@@ -1,15 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>登录</title>
-  </head>
-  <body>
-    <h2>登录</h2>
+<!-- filepath: f:\web_python\ll_project\accounts\templates\accounts\login.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3">
+  <h1 class="display-5 text-center">Log In</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 400px">
+  <div class="card-body">
+    <h5 class="card-title text-center mb-4">Welcome Back</h5>
     <form method="post">
-      {% csrf_token %} {{ form.as_p }}
-      <button type="submit">登录</button>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_username" class="form-label">Username</label>
+        <input
+          type="text"
+          name="username"
+          id="id_username"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="id_password" class="form-label">Password</label>
+        <input
+          type="password"
+          name="password"
+          id="id_password"
+          class="form-control"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Log In</button>
     </form>
-  </body>
-</html>
+    <div class="text-center mt-3">
+      <p class="text-muted">
+        Don't have an account?
+        <a href="{% url 'accounts:register' %}">Register</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock content %}

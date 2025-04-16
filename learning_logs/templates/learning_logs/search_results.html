@@ -1,0 +1,41 @@
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\search_results.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3 shadow-sm">
+  <h1 class="display-5 text-center text-primary">Search Results</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="container">
+  <h3>Topics</h3>
+  <ul class="list-group mb-4">
+    {% for topic in topics %}
+    <li class="list-group-item">
+      <a
+        href="{% url 'learning_logs:topic' topic.id %}"
+        class="text-decoration-none fw-bold"
+      >
+        {{ topic.text }}
+      </a>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">No topics found.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Entries</h3>
+  <ul class="list-group">
+    {% for entry in entries %}
+    <li class="list-group-item">
+      <p>{{ entry.text|truncatewords:20 }}</p>
+      <small class="text-muted"
+        >Topic:
+        <a href="{% url 'learning_logs:topic' entry.topic.id %}"
+          >{{ entry.topic.text }}</a
+        ></small
+      >
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">No entries found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock content %}

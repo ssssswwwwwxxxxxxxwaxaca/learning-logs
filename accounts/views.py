@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, logout as auth_logout  # 导入 Django 的内置 logout 函数，并重命名避免冲突
 from .forms import CustomUserChangeForm
+from django.contrib.auth.decorators import login_required
+
+
 
 @login_required
 def edit_profile(request):
@@ -32,3 +35,8 @@ def logout(request):
         return redirect('learning_logs:index')  # 重定向到 index 页面
     else:
         return render(request, 'accounts/logout.html')
+    
+@login_required
+def profile(request):
+    """ 显示用户的个人资料 """
+    return render(request,'accounts/profile.html')

@@ -3,6 +3,8 @@ from .models import Topic,Entry
 from .forms import TopicForm,EntryForm
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.db.models import Q
+
 # Create your views here.
 def index(request):
     #学习笔记的主页
@@ -14,6 +16,7 @@ def topics(request):
     topics=Topic.objects.filter(owner=request.user).order_by('date_added')
     context={'topics':topics}
     return render(request,'learning_logs/topics.html',context)
+
 @login_required
 def topic(request,topic_id):
     #显示单个主题及其所有的条目
@@ -78,3 +81,14 @@ def edit_entry(request,entry_id):
             return redirect('learning_logs:topic',topic_id=topic.id)
     context={'entry':entry,'topic':topic,'form':form}
     return render(request,'learning_logs/edit_entry.html',context)
+
+def search(request):
+    query = request.GET.get('q', '')  # 获取搜索关键词
+    topics = Topic.objects.filter(text__icontains=query)  # 搜索主题
+    entries = Entry.objects.filter(text__icontains=query)  # 搜索条目
+    context = {
+        'query': query,
+        'topics': topics,
+        'entries': entries,
+    }
+    return render(request, 'learning_logs/search_results.html', context)

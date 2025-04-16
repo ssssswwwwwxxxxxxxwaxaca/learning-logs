@@ -1,13 +1,32 @@
-{% extends "learning_logs/base.html" %}
-{% block content %}
-
-  <p> <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic}}</a></p>
-  <p>Edit entry:</p>
-
-    <form action="{% url 'learning_logs:edit_entry' entry.id %}" method="post">
-         {% csrf_token %}
-         {{ form.as_div }}
-    <button name="submit">Save changes</button>
-    </form>
-
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\edit_entry.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3">
+  <h1 class="display-5 text-center">Edit Entry</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="container">
+  <div class="card shadow-sm mx-auto" style="max-width: 600px">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">
+        Editing Entry for Topic:
+        <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic }}</a>
+      </h5>
+      <form
+        action="{% url 'learning_logs:edit_entry' entry.id %}"
+        method="post"
+      >
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="id_text" class="form-label">Entry Text</label>
+          <textarea name="text" id="id_text" class="form-control" rows="5">
+{{ form.text.value }}</textarea
+          >
+        </div>
+        <button type="submit" class="btn btn-primary w-100">
+          Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock content %}

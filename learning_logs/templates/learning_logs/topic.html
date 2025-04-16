@@ -1,29 +1,37 @@
-{% extends "learning_logs/base.html" %}
-
-{% block page_header %}
-    <h1>{{ topic.text }}</h1>
-{% endblock page_header %}
-
-{% block content %}
-    <p>
-        <a href="{% url 'learning_logs:new_entry' topic.id %}">Add a new entry</a>
-    </p>
-    {% for entry in entries %}
-        <div class="card mb-3">
-            <h4 class="card-header">
-                {{ entry.date_added|date:'M d, Y H:i' }}
-                <small>
-                    <a href="{% url 'learning_logs:edit_entry' entry.id %}">
-                        Edit entry
-                    </a>
-                </small>
-            </h4>
-            <div class="card-body">
-                {{ entry.text|linebreaks }}
-            </div>
-        </div>
-    {% empty %}
-        <p>There are no entries for this topic yet.</p>
-    {% endfor %}
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\topic.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3 shadow-sm">
+  <h1 class="display-5 text-center text-primary">{{ topic.text }}</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="container">
+  <div class="text-center mb-4">
+    <a
+      href="{% url 'learning_logs:new_entry' topic.id %}"
+      class="btn btn-success"
+    >
+      Add a New Entry
+    </a>
+  </div>
+  {% for entry in entries %}
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold">{{ entry.date_added|date:'M d, Y H:i' }}</span>
+      <a
+        href="{% url 'learning_logs:edit_entry' entry.id %}"
+        class="btn btn-sm btn-outline-primary"
+      >
+        Edit Entry
+      </a>
+    </div>
+    <div class="card-body">
+      <p class="card-text">{{ entry.text|linebreaks }}</p>
+    </div>
+  </div>
+  {% empty %}
+  <div class="alert alert-warning text-center" role="alert">
+    There are no entries for this topic yet.
+  </div>
+  {% endfor %}
+</div>
 {% endblock content %}
-%}

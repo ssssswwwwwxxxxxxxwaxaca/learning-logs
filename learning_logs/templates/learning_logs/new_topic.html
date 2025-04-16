@@ -1,14 +1,14 @@
-{% extends "learning_logs/base.html" %}
-{% block content%}
-
-  <p>Add a new topic:</p>
-    <form action="{% url 'learning_logs:new_topic' %}" method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button name="submit">Add topic</button>
-    </form>
-
-
-    
-
+{% extends "learning_logs/base.html" %} {% block content %}
+<div class="container">
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 600px">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Add a New Topic</h5>
+      <form action="{% url 'learning_logs:new_topic' %}" method="post">
+        {% csrf_token %}
+        <div class="mb-3">{{ form.as_p }}</div>
+        <button type="submit" class="btn btn-primary w-100">Add Topic</button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock content %}

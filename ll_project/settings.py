@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'accounts',
     #第三方应用程序
     'django_bootstrap5',
+    "widget_tweaks",
     #django apps born with
     "django.contrib.admin",
     "django.contrib.auth",

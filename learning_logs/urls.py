@@ -20,4 +20,7 @@ urlpatterns = [
 
     #新增编辑条目的界面
     path('edit_entry/<int:entry_id>',views.edit_entry,name='edit_entry'),
+    
+    #搜索的界面
+    path('search/',views.search,name='search'),
 ]

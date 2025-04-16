@@ -1,21 +1,33 @@
-{% extends "learning_logs/base.html" %}
-
-{% block page_header %}
-   <h1>Topics</h1>
-{% endblock page_header %}
-
-{% block content %}
-    <p>Topics</p>
-    <ul class="list-group border-bottom pb-2 mb-4">
-        {% for topic in topics %}
-            <li class="list-group-item border-0">
-             <a href="{% url 'learning_logs:topic' topic.id%}">
-                 {{ topic.text }}
-             </a>
-            </li>   
-        {% empty %}
-            <li class="list-group-item border-0">No topics have been added yet.</li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'learning_logs:new_topic' %}">Add a new topic</a>
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\topics.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3 shadow-sm">
+  <h1 class="display-5 text-center text-primary">Topics</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="container">
+  <ul class="list-group mb-4">
+    {% for topic in topics %}
+    <li
+      class="list-group-item d-flex justify-content-between align-items-center"
+    >
+      <a
+        href="{% url 'learning_logs:topic' topic.id %}"
+        class="text-decoration-none fw-bold"
+      >
+        {{ topic.text }}
+      </a>
+      <span class="badge bg-primary rounded-pill">View</span>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-center text-muted">
+      No topics have been added yet.
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="text-center">
+    <a href="{% url 'learning_logs:new_topic' %}" class="btn btn-success">
+      Add a New Topic
+    </a>
+  </div>
+</div>
 {% endblock content %}

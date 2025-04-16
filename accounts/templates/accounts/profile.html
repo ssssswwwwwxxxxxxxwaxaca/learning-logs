@@ -1,0 +1,22 @@
+<!-- filepath: f:\web_python\ll_project\accounts\templates\accounts\profile.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3">
+  <h1 class="display-5 text-center">Profile</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 600px">
+  <div class="card-body">
+    <h5 class="card-title text-center mb-4">User Information</h5>
+    <p class="card-text"><strong>Username:</strong> {{ user.username }}</p>
+    <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
+    <p class="card-text">
+      <strong>Joined on:</strong> {{ user.date_joined|date:"F j, Y" }}
+    </p>
+    <div class="text-center mt-4">
+      <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary"
+        >Edit Profile</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,5 +1,50 @@
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">保存</button>
-</form>
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="p-4 mb-4 bg-light border rounded-3">
+  <h1 class="display-5 text-center">Edit Profile</h1>
+</div>
+{% endblock page_header %} {% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 600px">
+  <div class="card-body">
+    <h5 class="card-title text-center mb-4">Update Your Information</h5>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">{{ form.as_p }}</div>
+      <hr class="my-4" />
+      <h5 class="text-center mb-3">Change Password</h5>
+      <div class="mb-3">
+        <label for="id_old_password" class="form-label">Current Password</label>
+        <input
+          type="password"
+          name="old_password"
+          id="id_old_password"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="id_new_password1" class="form-label">New Password</label>
+        <input
+          type="password"
+          name="new_password1"
+          id="id_new_password1"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="id_new_password2" class="form-label"
+          >Confirm New Password</label
+        >
+        <input
+          type="password"
+          name="new_password2"
+          id="id_new_password2"
+          class="form-control"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endblock content %}

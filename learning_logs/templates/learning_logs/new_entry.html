@@ -1,12 +1,32 @@
-{% extends "learning_logs/base.html" %}
-{% block content %}
-
-<p> <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic }}</a></p>
-
-    <p>Add a new entry:</p>
-    <form action="{% url 'learning_logs:new_entry' topic.id %}" method="post">
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\new_entry.html -->
+{% extends "learning_logs/base.html" %} {% block content %}
+<div class="container">
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 600px">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Add a New Entry</h5>
+      <p class="text-center">
+        <a
+          href="{% url 'learning_logs:topic' topic.id %}"
+          class="text-decoration-none"
+        >
+          Back to Topic: <strong>{{ topic }}</strong>
+        </a>
+      </p>
+      <form action="{% url 'learning_logs:new_entry' topic.id %}" method="post">
         {% csrf_token %}
-        {{ form.as_div}}
-        <button name="submit"> Add entry</button>
-    </form>
+        <div class="mb-3">
+          <label for="id_text" class="form-label">Entry Text</label>
+          <textarea
+            name="text"
+            id="id_text"
+            class="form-control"
+            rows="8"
+            placeholder="Write your entry here..."
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Add Entry</button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock content %}
