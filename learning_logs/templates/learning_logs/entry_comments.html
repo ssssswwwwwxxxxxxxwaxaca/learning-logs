@@ -1,0 +1,30 @@
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\entry_comments.html -->
+{% extends "learning_logs/base.html" %} {% block content %}
+<div class="container">
+  <h2>Comments for Entry: {{ entry.text }}</h2>
+  <hr />
+
+  <h4>Comments</h4>
+  <ul class="list-group mb-4">
+    {% for comment in comments %}
+    <li class="list-group-item">
+      <strong>{{ comment.user.username }}</strong>:
+      <p>{{ comment.text }}</p>
+      <small class="text-muted">{{ comment.created_at }}</small>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">No comments yet.</li>
+    {% endfor %}
+  </ul>
+
+  {% if user.is_authenticated %}
+  <h5>Add a Comment</h5>
+  <form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+  {% else %}
+  <p class="text-muted">You must be logged in to add a comment.</p>
+  {% endif %}
+</div>
+{% endblock content %}

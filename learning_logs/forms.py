@@ -1,7 +1,8 @@
 from django import forms
 from django.forms import ModelForm
 
-from .models import Topic, Entry
+from .models import Topic, Entry, Comment
+
 class TopicForm(forms.ModelForm):
     class Meta:
         model=Topic
@@ -15,3 +16,15 @@ class EntryForm(forms.ModelForm):
         fields=['text']
         labels={'text':''}
         widgets={'text':forms.Textarea(attrs={'cols':80})}
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write your comment here...'}),
+        }
+        labels = {
+            'text': '',
+        }

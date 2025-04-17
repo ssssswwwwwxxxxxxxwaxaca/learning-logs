@@ -1,5 +1,32 @@
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">注册</button>
-</form>
+<!-- filepath: f:\web_python\ll_project\accounts\templates\accounts\register.html -->
+{% extends "learning_logs/base.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="mb-0">用户注册</h4>
+        </div>
+        <div class="card-body">
+          <p class="text-muted text-center mb-4">
+            请填写以下信息以创建您的账户。
+          </p>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.username.label_tag }} {{ form.username }}
+            </div>
+            <div class="mb-3">
+              {{ form.password1.label_tag }} {{ form.password1 }}
+            </div>
+            <div class="mb-3">
+              {{ form.password2.label_tag }} {{ form.password2 }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">注册</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

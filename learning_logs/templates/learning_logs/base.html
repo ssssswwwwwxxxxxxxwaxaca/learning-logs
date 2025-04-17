@@ -9,9 +9,9 @@
   <body>
     <nav class="navbar navbar-expand-md navbar-light bg-light mb-4 border">
       <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'learning_logs:index' %}"
-          >Learning Log</a
-        >
+        <a class="navbar-brand" href="{% url 'learning_logs:index' %}">
+          Learning Log
+        </a>
         <button
           class="navbar-toggler"
           type="button"
@@ -26,11 +26,12 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'learning_logs:topics' %}"
-                >Topics</a
-              >
+              <a class="nav-link" href="{% url 'learning_logs:topics' %}">
+                Topics
+              </a>
             </li>
           </ul>
+
           <!-- 搜索表单 -->
           <form
             class="d-flex ms-auto"
@@ -48,13 +49,35 @@
               Search
             </button>
           </form>
+
           <ul class="navbar-nav ms-auto mb-2 mb-md-0 d-flex align-items-center">
             {% if user.is_authenticated %}
-            <li class="nav-item me-3">
-              <span class="navbar-text"
-                >Hello, <strong>{{ user.username }}</strong></span
+            <!-- 用户信息区块（新增头像） -->
+            <li class="nav-item me-3 d-flex align-items-center">
+              {% if user.avatar_url %}
+              <img
+                src="{{ user.avatar_url }}"
+                alt="Avatar"
+                class="rounded-circle me-2"
+                style="width: 32px; height: 32px; object-fit: cover"
+              />
+              {% else %}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                fill="gray"
+                class="bi me-2"
+                viewBox="0 0 16 16"
               >
+                <circle cx="8" cy="8" r="8" />
+              </svg>
+              {% endif %}
+              <span class="navbar-text">
+                Hello, <strong>{{ user.username }}</strong>
+              </span>
             </li>
+
             <li class="nav-item me-2">
               <a
                 class="nav-link btn btn-outline-primary btn-sm"
@@ -95,6 +118,7 @@
         </div>
       </div>
     </nav>
+
     <main class="container">
       <div class="pb-2 mb-2 border-bottom">
         {% block page_header %}{% endblock page_header %}

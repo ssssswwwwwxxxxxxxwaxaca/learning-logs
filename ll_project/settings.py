@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     #django apps born with
     "django.contrib.admin",
     "django.contrib.auth",
-    "django.contrib.contenttypes",
+    "django.contrib.contenttypes",    
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -135,6 +135,17 @@ LOGOUT_REDIRECT_URL = 'learning_logs:index'
 LOGIN_URL = 'accounts:login'
 
 
-# 添加媒体文件配置
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# 媒体文件路径配置
+MEDIA_URL = '/media/'          # URL 前缀
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  
+
+# ll_project/settings.py
+AUTH_USER_MODEL = 'accounts.CustomUser'  # 新增这一行
+
+
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # 默认后端
+]
+
+DEBUG = True  # 查看详细错误信息

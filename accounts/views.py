@@ -1,11 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login, logout as auth_logout  # 导入 Django 的内置 logout 函数，并重命名避免冲突
-from .forms import CustomUserChangeForm
-from django.contrib.auth.decorators import login_required
-
-
+from django.contrib.auth import login, logout as auth_logout
+from .models import CustomUser  # 导入自定义用户模型
+from .forms import CustomUserChangeForm, CustomUserCreationForm  # 合并导入
 
 @login_required
 def edit_profile(request):
@@ -20,23 +17,42 @@ def edit_profile(request):
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect('learning_logs:index')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
 def logout(request):
     if request.method == 'POST':
-        auth_logout(request)  # 使用 Django 的内置 logout 函数
-        return redirect('learning_logs:index')  # 重定向到 index 页面
+        auth_logout(request)
+        return redirect('learning_logs:index')
     else:
         return render(request, 'accounts/logout.html')
-    
+
 @login_required
 def profile(request):
-    """ 显示用户的个人资料 """
-    return render(request,'accounts/profile.html')
+    """ 处理头像上传 """
+    if request.method == "POST":
+        avatar = request.FILES.get('avatar')
+        if avatar:
+            user = request.user
+            user.avatar_url = avatar  # 确保模型中存在此字段
+            user.save()
+        return redirect('accounts:profile')
+    return render(request, 'accounts/profile.html')
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('learning_logs:index')
+        else:
+            return render(request, 'accounts/login.html', {'error': '用户名或密码错误'})
+    return render(request, 'accounts/login.html')

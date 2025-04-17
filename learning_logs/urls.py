@@ -23,4 +23,13 @@ urlpatterns = [
     
     #搜索的界面
     path('search/',views.search,name='search'),
+    
+    #删除entry
+    path('delete_entry/<int:entry_id>',views.delete_entry,name='delete_entry'),
+    
+    #添加entry评论
+    path('entry/<int:entry_id>/comments/', views.entry_comments, name='entry_comments'),
+
+    #删除topic
+    path('delete_topic/<int:topic_id>/', views.delete_topic, name='delete_topic'),
 ]

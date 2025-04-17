@@ -16,7 +16,28 @@
       >
         {{ topic.text }}
       </a>
-      <span class="badge bg-primary rounded-pill">View</span>
+      <div>
+        <form
+          method="post"
+          action="{% url 'learning_logs:delete_topic' topic.id %}"
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('确定要删除这个主题吗？');"
+          >
+            delete
+          </button>
+        </form>
+        <a
+          href="{% url 'learning_logs:topic' topic.id %}"
+          class="btn btn-sm btn-primary"
+        >
+          view
+        </a>
+      </div>
     </li>
     {% empty %}
     <li class="list-group-item text-center text-muted">

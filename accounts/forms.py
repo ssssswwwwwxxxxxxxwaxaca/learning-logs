@@ -1,8 +1,14 @@
 from django import forms
-from django.contrib.auth.forms import UserChangeForm
-from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from .models import CustomUser
+
+
+class CustomUserCreationForm(UserCreationForm):  # 新增创建表单
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email']
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name', 'email']  # 恢复到默认的 User 字段
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'email']

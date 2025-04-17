@@ -1,22 +1,56 @@
-<!-- filepath: f:\web_python\ll_project\accounts\templates\accounts\profile.html -->
 {% extends "learning_logs/base.html" %} {% block page_header %}
 <div class="p-4 mb-4 bg-light border rounded-3">
   <h1 class="display-5 text-center">Profile</h1>
 </div>
-{% endblock page_header %} {% block content %}
+{% endblock %} {% block content %}
 <div class="card shadow-sm mx-auto" style="max-width: 600px">
   <div class="card-body">
     <h5 class="card-title text-center mb-4">User Information</h5>
+
+    <!-- 头像预览 -->
+    <div class="d-flex justify-content-center mb-4">
+      {% if user.avatar_url %}
+      <img
+        src="{{ user.avatar_url.url }}"
+        alt="User Avatar"
+        class="rounded-circle"
+        style="width: 120px; height: 120px; object-fit: cover"
+      />
+      {% else %}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="120"
+        height="120"
+        fill="gray"
+        viewBox="0 0 16 16"
+      >
+        <circle cx="8" cy="8" r="8" />
+      </svg>
+      {% endif %}
+    </div>
+
+    <!-- 用户信息 -->
     <p class="card-text"><strong>Username:</strong> {{ user.username }}</p>
     <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
     <p class="card-text">
       <strong>Joined on:</strong> {{ user.date_joined|date:"F j, Y" }}
     </p>
-    <div class="text-center mt-4">
-      <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary"
-        >Edit Profile</a
-      >
-    </div>
+
+    <!-- 头像上传表单 -->
+    <form method="post" enctype="multipart/form-data" class="mt-4">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="avatar" class="form-label">Upload Avatar</label>
+        <input
+          type="file"
+          class="form-control"
+          id="avatar"
+          name="avatar"
+          accept="image/*"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
   </div>
 </div>
-{% endblock content %}
+{% endblock %}

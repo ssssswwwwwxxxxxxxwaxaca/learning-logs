@@ -1,9 +1,5 @@
 <!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\topic.html -->
-{% extends "learning_logs/base.html" %} {% block page_header %}
-<div class="p-4 mb-4 bg-light border rounded-3 shadow-sm">
-  <h1 class="display-5 text-center text-primary">{{ topic.text }}</h1>
-</div>
-{% endblock page_header %} {% block content %}
+{% extends "learning_logs/base.html" %} {% block content %}
 <div class="container">
   <div class="text-center mb-4">
     <a
@@ -17,12 +13,37 @@
   <div class="card mb-4 shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span class="fw-bold">{{ entry.date_added|date:'M d, Y H:i' }}</span>
-      <a
-        href="{% url 'learning_logs:edit_entry' entry.id %}"
-        class="btn btn-sm btn-outline-primary"
-      >
-        Edit Entry
-      </a>
+      <div>
+        <!-- 编辑按钮 -->
+        <a
+          href="{% url 'learning_logs:edit_entry' entry.id %}"
+          class="btn btn-sm btn-outline-primary"
+        >
+          Edit Entry
+        </a>
+        <!-- 删除按钮 -->
+        <form
+          method="post"
+          action="{% url 'learning_logs:delete_entry' entry.id %}"
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="btn btn-sm btn-outline-danger"
+            onclick="return confirm('Are you sure you want to delete this entry?');"
+          >
+            Delete Entry
+          </button>
+        </form>
+        <!-- 评论按钮 -->
+        <a
+          href="{% url 'learning_logs:entry_comments' entry.id %}"
+          class="btn btn-sm btn-outline-info"
+        >
+          Comments
+        </a>
+      </div>
     </div>
     <div class="card-body">
       <p class="card-text">{{ entry.text|linebreaks }}</p>
