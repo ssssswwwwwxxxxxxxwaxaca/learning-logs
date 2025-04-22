@@ -11,7 +11,7 @@
     <div class="d-flex justify-content-center mb-4">
       {% if user.avatar_url %}
       <img
-        src="{{ user.avatar_url.url }}"
+        src="{{ user.avatar_url.url }}?{{ user.date_joined|date:'U' }}"
         alt="User Avatar"
         class="rounded-circle"
         style="width: 120px; height: 120px; object-fit: cover"
@@ -35,6 +35,8 @@
     <p class="card-text">
       <strong>Joined on:</strong> {{ user.date_joined|date:"F j, Y" }}
     </p>
+    <p>Avatar Path: {{ user.avatar_url }}</p>
+    <p>Avatar URL: {{ user.avatar_url.url }}</p>
 
     <!-- 头像上传表单 -->
     <form method="post" enctype="multipart/form-data" class="mt-4">
@@ -45,7 +47,7 @@
           type="file"
           class="form-control"
           id="avatar"
-          name="avatar"
+          name="avatar_url"
           accept="image/*"
         />
       </div>

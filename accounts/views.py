@@ -37,7 +37,7 @@ def logout(request):
 def profile(request):
     """ 处理头像上传 """
     if request.method == "POST":
-        avatar = request.FILES.get('avatar')
+        avatar = request.FILES.get('avatar_url')
         if avatar:
             user = request.user
             user.avatar_url = avatar  # 确保模型中存在此字段
