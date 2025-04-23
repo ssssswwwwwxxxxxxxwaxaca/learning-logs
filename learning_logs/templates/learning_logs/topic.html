@@ -59,6 +59,12 @@
     >
       Add a New Entry
     </a>
+    <a
+      href="{% url 'learning_logs:ai_assistant' topic.id %}"
+      class="btn btn-success"
+    >
+      <i class="fas fa-robot me-2"></i>AI Assistant
+    </a>
   </div>
   {% for entry in entries %}
   <div class="card mb-4 shadow-sm">

@@ -1,13 +1,18 @@
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import LearningPath, PathStep, StepResource, Topic, Entry, Comment,StudySession,LearningGoal
+from .models import AIInteraction, LearningPath, PathStep, StepResource, Topic, Entry, Comment,StudySession,LearningGoal
 from .forms import LearningPathForm, PathStepForm, StepResourceForm, TopicForm, EntryForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
+from .utils.ollama_client import OllamaClient
+from .forms import AIQuestionForm, AIFeatureForm,AIQuestionForm
+import markdown
 
+from learning_logs import models
 
 app_name = 'learning_logs'
 # Create your views here.
@@ -119,7 +124,7 @@ def delete_entry(request, entry_id):
 
 def search(request):
     query = request.GET.get('q', '')  # 获取搜索关键词
-    topics = Topic.objects.filter(text__icontains=query)  # 搜索主题
+    topics = Topic.objects.filter(text__icontains(query))  # 搜索主题
     entries = Entry.objects.filter(text__icontains(query))  # 搜索条目
     context = {
         'query': query,
@@ -435,3 +440,107 @@ def delete_learning_path(request, path_id):
         return redirect('learning_logs:learning_paths')
     
     return redirect('learning_logs:learning_path_detail', path_id=path.id)
+
+@login_required
+def ai_assistant(request, topic_id):
+    """AI学习助手"""
+    topic = get_object_or_404(Topic, id=topic_id)
+    # 确认用户是否有权限访问该主题
+    check_topic_owner(topic, request.user)
+    
+    # 获取该topic的所有entry
+    entries = topic.entry_set.all()
+    entries_text = "\n\n".join([f"Entry {i+1}:\n{entry.text}" for i, entry in enumerate(entries)])
+    
+    # 获取所有的AI历史互动
+    interactions = AIInteraction.objects.filter(topic=topic, user=request.user)
+    question_form = AIQuestionForm()
+    feature_form = AIFeatureForm()
+    
+    context = {
+        'topic': topic,
+        'entries': entries,
+        'interactions': interactions,
+        'question_form': question_form,
+        'feature_form': feature_form,
+    }
+    
+    # 开始处理AI问题
+    if request.method == 'POST' and 'submit_question' in request.POST:
+        question_form = AIQuestionForm(request.POST)
+        if question_form.is_valid():
+            question = question_form.cleaned_data['question']
+            
+            # 调用Ollama API获取回答
+            try:
+                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'qwq:latest'))
+                answer = client.answer_question(question, entries_text)
+                
+                # 将markdown格式的回答转换为HTML
+                answer_html = markdown.markdown(answer)
+                
+                # 保存交互到数据库
+                interaction = AIInteraction.objects.create(
+                    user=request.user,
+                    topic=topic,
+                    question=question,
+                    response=answer,
+                    interaction_type='question'
+                )
+                
+                context['answer'] = answer_html
+                context['last_interaction'] = interaction
+                messages.success(request, "问题已成功回答!")
+            except Exception as e:
+                messages.error(request, f"无法连接到AI服务: {str(e)}")
+        else:
+            messages.error(request, "请提供有效的问题")
+        
+    # 处理AI特征请求 摘要 测验 建议
+    elif request.method == 'POST' and 'submit_feature' in request.POST:
+        feature_form = AIFeatureForm(request.POST)
+        if feature_form.is_valid():
+            feature_type = feature_form.cleaned_data['feature_type']
+            
+            try:
+                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'qwq:latest'))
+                
+                if feature_type == 'summary':
+                    result = client.get_topic_summary(topic.text, entries_text)
+                    interaction_type = 'summary'
+                    question = f"为主题'{topic.text}'生成摘要"
+                    success_message = "摘要生成成功!"
+                
+                elif feature_type == 'quiz':
+                    result = client.generate_quiz(topic.text, entries_text)
+                    interaction_type = 'quiz'
+                    question = f"为主题'{topic.text}'创建测验题"
+                    success_message = "测验题生成成功!"
+                    
+                elif feature_type == 'recommendations':
+                    result = client.get_learning_recommendations(topic.text, entries_text)
+                    interaction_type = 'recommendation'
+                    question = f"为主题'{topic.text}'提供学习建议"
+                    success_message = "学习建议生成成功!"
+                
+                # 将markdown格式的结果转换为HTML
+                result_html = markdown.markdown(result)
+                
+                # 保存交互到数据库
+                interaction = AIInteraction.objects.create(
+                    user=request.user,
+                    topic=topic,
+                    question=question,
+                    response=result,
+                    interaction_type=interaction_type
+                )
+                
+                context['answer'] = result_html
+                context['last_interaction'] = interaction
+                messages.success(request, success_message)
+            except Exception as e:
+                messages.error(request, f"无法连接到AI服务: {str(e)}")
+        else:
+            messages.error(request, "请选择有效的AI功能")
+    
+    return render(request, 'learning_logs/ai_assistant.html', context)

@@ -156,3 +156,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     # 其他路由
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+OLLAMA_API_URL = 'http://localhost:11434'
+OLLAMA_MODEL = 'qwq:latest'

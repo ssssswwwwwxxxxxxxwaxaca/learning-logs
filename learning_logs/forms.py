@@ -63,3 +63,27 @@ class StepResourceForm(forms.ModelForm):
         widgets = {
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
+
+
+#处理ai的表单
+class AIQuestionForm(forms.Form):
+    """AI问题表单"""
+    question=forms.CharField(
+        widget=forms.Textarea(attrs={'rows':3,'placeholder':'Please enter your question here...'})
+        ,label='Your Question'
+    )
+    
+    
+class AIFeatureForm(forms.Form):
+    """AI功能表单"""
+    FEATURE_CHOICES=[
+        ('topic_summary','Topic Summary'),
+        ('quiz','Quiz'),
+        ('recommendation','Get Learning Recommendation')
+    ]
+    feature_type=forms.ChoiceField(
+        choices=FEATURE_CHOICES,
+        widget=forms.RadioSelect,
+        label="Select a Feature"
+    )
+    

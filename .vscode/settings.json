@@ -1,4 +1,9 @@
 {
   "python.REPL.enableREPLSmartSend": false,
-  "cSpell.words": ["truncatechars"]
+  "cSpell.words": ["truncatechars"],
+  "[django-html]": {
+    "editor.formatOnSave": false
+  },
+  "html.format.wrapLineLength": 0,
+  "html.format.templating": true
 }

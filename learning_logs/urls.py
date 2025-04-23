@@ -50,4 +50,7 @@ urlpatterns = [
     path('steps/<int:step_id>/toggle-completion/', views.toggle_step_completion, name='toggle_step_completion'),
     # 资源
     path('resources/<int:resource_id>/toggle-completion/', views.toggle_resource_completion, name='toggle_resource_completion'),
+    
+    # 添加AI助手URL模式
+    path('topics/<int:topic_id>/ai-assistant/', views.ai_assistant, name='ai_assistant')
 ]

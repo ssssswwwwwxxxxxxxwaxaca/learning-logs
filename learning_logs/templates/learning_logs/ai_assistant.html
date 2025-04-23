@@ -1,0 +1,275 @@
+{% extends 'learning_logs/base.html' %} 
+{% load static %} 
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-primary m-0">AI Learning Assistant</h1>
+    <p class="text-muted">
+      <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic.text }}</a> -
+      Get AI help with your studies
+    </p>
+  </div>
+  <a
+    href="{% url 'learning_logs:topic' topic.id %}"
+    class="btn btn-outline-primary"
+  >
+    <i class="fas fa-arrow-left me-2"></i>Back to Topic
+  </a>
+</div>
+{% endblock %} {% block content %}
+<div class="row g-4">
+  <!-- AI Question Form -->
+  <div class="col-md-6">
+    <div class="card shadow border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-question-circle text-primary me-2"></i>Ask AI
+          Assistant
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            {{ question_form.question.label_tag }} {{ question_form.question }}
+          </div>
+          <button type="submit" name="submit_question" class="btn btn-primary">
+            <i class="fas fa-paper-plane me-2"></i>Submit Question
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- AI Features Form -->
+    <div class="card shadow border-0 mt-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-magic text-primary me-2"></i>AI Learning Features
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <p class="mb-2">{{ feature_form.feature_type.label }}</p>
+            <div class="d-flex flex-column gap-2">
+              {% for radio in feature_form.feature_type %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                  {{ radio.choice_label }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <button type="submit" name="submit_feature" class="btn btn-success">
+            <i class="fas fa-bolt me-2"></i>Generate
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="col-md-6">
+    <div class="card shadow border-0 h-100">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-robot text-primary me-2"></i>AI Response
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if answer %}
+        <div class="ai-response mb-4">
+          {% if last_interaction.interaction_type == 'question' %}
+          <div
+            class="user-question mb-3 p-3 rounded bg-light border-start border-primary border-4"
+          >
+            <strong>Your Question:</strong>
+            <p class="mb-0 mt-2">{{ last_interaction.question }}</p>
+          </div>
+          {% endif %}
+
+          <div class="ai-answer">{{ answer|safe }}</div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <div class="mb-3">
+            <i class="fas fa-robot fa-4x text-muted"></i>
+          </div>
+          <h5 class="mb-3">Ask me anything about this topic!</h5>
+          <p class="text-muted">
+            I can answer questions, generate summaries, create quizzes, or
+            recommend further learning resources based on your topic content.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div class="col-12">
+    <div class="card shadow border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-history text-primary me-2"></i>Previous Interactions
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if interactions %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Question/Request</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for interaction in interactions %}
+              <tr>
+                <td>
+                  <span
+                    class="badge {% if interaction.interaction_type == 'question' %}bg-primary{% elif interaction.interaction_type == 'summary' %}bg-info{% elif interaction.interaction_type == 'quiz' %}bg-warning{% else %}bg-success{% endif %}"
+                  >
+                    {{ interaction.get_interaction_type_display }}
+                  </span>
+                </td>
+                <td>{{ interaction.question|truncatechars:50 }}</td>
+                <td>{{ interaction.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-outline-secondary view-history-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#historyModal"
+                    data-question="{{ interaction.question }}"
+                    data-response="{{ interaction.response }}"
+                    data-type="{{ interaction.get_interaction_type_display }}"
+                  >
+                    <i class="fas fa-eye me-1"></i>View
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">
+          No previous interactions with AI for this topic.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel">AI Interaction</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-4">
+          <h6>Question/Request:</h6>
+          <div id="modalQuestion" class="p-3 bg-light rounded"></div>
+        </div>
+        <div>
+          <h6>AI Response:</h6>
+          <div id="modalResponse" class="p-3 border rounded"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Handle modal history view
+    const historyButtons = document.querySelectorAll(".view-history-btn");
+    historyButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const question = this.getAttribute("data-question");
+        const response = this.getAttribute("data-response");
+        const type = this.getAttribute("data-type");
+
+        document.getElementById(
+          "historyModalLabel"
+        ).textContent = `${type} - AI Interaction`;
+        document.getElementById("modalQuestion").textContent = question;
+
+        // Convert markdown to HTML on client-side (simplified version)
+        const responseText = response
+          .replace(/\n\n/g, "<br><br>")
+          .replace(/\n/g, "<br>");
+        document.getElementById("modalResponse").innerHTML = responseText;
+      });
+    });
+  });
+</script>
+{% endblock %} {% block extra_css %}
+<style>
+  .ai-response {
+    font-size: 0.95rem;
+  }
+
+  .ai-answer h1,
+  .ai-answer h2,
+  .ai-answer h3 {
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-answer h4,
+  .ai-answer h5,
+  .ai-answer h6 {
+    font-size: 1.25rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-answer ul,
+  .ai-answer ol {
+    padding-left: 1.5rem;
+  }
+
+  .ai-answer pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow: auto;
+  }
+
+  .ai-answer code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    font-size: 0.875rem;
+    color: #d63384;
+    word-wrap: break-word;
+  }
+
+  .ai-answer blockquote {
+    padding-left: 1rem;
+    border-left: 0.25rem solid #ced4da;
+    color: #6c757d;
+  }
+</style>
+{% endblock %}

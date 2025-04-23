@@ -166,5 +166,46 @@ class StepResource(models.Model):
     
     def __str__(self):
         return self.title
+    
+    
+class AIInteraction(models.Model):
+    """存储用户与AI助手的交互"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, null=True, blank=True)
+    question = models.TextField()
+    response = models.TextField()
+    interaction_type = models.CharField(max_length=20,
+        choices=[
+        ('question', 'Question'),
+        ('summary', 'Summary'),
+        ('quiz', 'Quiz'),
+        ('recommendation', 'Recommendation')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.interaction_type}: {self.question[:50]}"
 
 
+class AIInteraction(models.Model):
+    """存储用户与AI助手的交互"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, null=True, blank=True)
+    question = models.TextField()
+    response = models.TextField()
+    interaction_type = models.CharField(max_length=20, choices=[
+        ('question', 'Question'),
+        ('summary', 'Summary'),
+        ('quiz', 'Quiz'),
+        ('recommendation', 'Recommendation')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.interaction_type}: {self.question[:50]}"
