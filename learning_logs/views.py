@@ -11,9 +11,9 @@ from datetime import timedelta
 from .utils.ollama_client import OllamaClient
 from .forms import AIQuestionForm, AIFeatureForm,AIQuestionForm
 import markdown
-
+from django.http import JsonResponse
 from learning_logs import models
-
+import json
 app_name = 'learning_logs'
 # Create your views here.
 def index(request):
@@ -441,6 +441,7 @@ def delete_learning_path(request, path_id):
     
     return redirect('learning_logs:learning_path_detail', path_id=path.id)
 
+# 将ai_assistant视图函数修改如下
 @login_required
 def ai_assistant(request, topic_id):
     """AI学习助手"""
@@ -465,6 +466,9 @@ def ai_assistant(request, topic_id):
         'feature_form': feature_form,
     }
     
+    # 检查是否是AJAX请求
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.POST.get('ajax_request') == 'true'
+    
     # 开始处理AI问题
     if request.method == 'POST' and 'submit_question' in request.POST:
         question_form = AIQuestionForm(request.POST)
@@ -473,7 +477,7 @@ def ai_assistant(request, topic_id):
             
             # 调用Ollama API获取回答
             try:
-                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'qwq:latest'))
+                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'llama3'))
                 answer = client.answer_question(question, entries_text)
                 
                 # 将markdown格式的回答转换为HTML
@@ -488,13 +492,54 @@ def ai_assistant(request, topic_id):
                     interaction_type='question'
                 )
                 
-                context['answer'] = answer_html
-                context['last_interaction'] = interaction
-                messages.success(request, "问题已成功回答!")
+                if is_ajax:
+                    # 构建HTML响应
+                    html_response = f'''
+                    <div class="ai-response mb-4">
+                        <div class="user-question mb-3 p-3 rounded bg-light border-start border-primary border-4">
+                            <strong>Your Question:</strong>
+                            <p class="mb-0 mt-2">{question}</p>
+                        </div>
+                        <div class="ai-answer">{answer_html}</div>
+                    </div>
+                    '''
+                    
+                    # 返回JSON响应
+                    return JsonResponse({
+                        'status': 'success',
+                        'html_response': html_response,
+                        'update_interactions': True,
+                        'new_interaction': {
+                            'id': interaction.id,
+                            'question': interaction.question,
+                            'response': interaction.response,
+                            'interaction_type': interaction.interaction_type,
+                            'interaction_type_display': interaction.get_interaction_type_display(),
+                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                        }
+                    })
+                else:
+                    context['answer'] = answer_html
+                    context['last_interaction'] = interaction
+                    messages.success(request, "问题已成功回答!")
             except Exception as e:
-                messages.error(request, f"无法连接到AI服务: {str(e)}")
+                error_msg = f"无法连接到AI服务: {str(e)}"
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': error_msg
+                    })
+                else:
+                    messages.error(request, error_msg)
         else:
-            messages.error(request, "请提供有效的问题")
+            error_msg = "请提供有效的问题"
+            if is_ajax:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': error_msg
+                })
+            else:
+                messages.error(request, error_msg)
         
     # 处理AI特征请求 摘要 测验 建议
     elif request.method == 'POST' and 'submit_feature' in request.POST:
@@ -503,25 +548,28 @@ def ai_assistant(request, topic_id):
             feature_type = feature_form.cleaned_data['feature_type']
             
             try:
-                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'qwq:latest'))
+                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'llama3'))
                 
                 if feature_type == 'summary':
                     result = client.get_topic_summary(topic.text, entries_text)
                     interaction_type = 'summary'
                     question = f"为主题'{topic.text}'生成摘要"
                     success_message = "摘要生成成功!"
+                    title = "摘要"
                 
                 elif feature_type == 'quiz':
                     result = client.generate_quiz(topic.text, entries_text)
                     interaction_type = 'quiz'
                     question = f"为主题'{topic.text}'创建测验题"
                     success_message = "测验题生成成功!"
+                    title = "测验题"
                     
                 elif feature_type == 'recommendations':
                     result = client.get_learning_recommendations(topic.text, entries_text)
                     interaction_type = 'recommendation'
                     question = f"为主题'{topic.text}'提供学习建议"
                     success_message = "学习建议生成成功!"
+                    title = "学习建议"
                 
                 # 将markdown格式的结果转换为HTML
                 result_html = markdown.markdown(result)
@@ -535,12 +583,66 @@ def ai_assistant(request, topic_id):
                     interaction_type=interaction_type
                 )
                 
-                context['answer'] = result_html
-                context['last_interaction'] = interaction
-                messages.success(request, success_message)
+                if is_ajax:
+                    # 构建HTML响应
+                    html_response = f'''
+                    <div class="ai-response mb-4">
+                        <div class="feature-request mb-3 p-3 rounded bg-light border-start border-success border-4">
+                            <strong>{title}请求:</strong>
+                            <p class="mb-0 mt-2">{question}</p>
+                        </div>
+                        <div class="ai-answer">{result_html}</div>
+                    </div>
+                    '''
+                    
+                    # 返回JSON响应
+                    return JsonResponse({
+                        'status': 'success',
+                        'html_response': html_response,
+                        'update_interactions': True,
+                        'new_interaction': {
+                            'id': interaction.id,
+                            'question': interaction.question,
+                            'response': interaction.response,
+                            'interaction_type': interaction.interaction_type,
+                            'interaction_type_display': interaction.get_interaction_type_display(),
+                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                        }
+                    })
+                else:
+                    context['answer'] = result_html
+                    context['last_interaction'] = interaction
+                    messages.success(request, success_message)
             except Exception as e:
-                messages.error(request, f"无法连接到AI服务: {str(e)}")
+                error_msg = f"无法连接到AI服务: {str(e)}"
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': error_msg
+                    })
+                else:
+                    messages.error(request, error_msg)
         else:
-            messages.error(request, "请选择有效的AI功能")
+            error_msg = "请选择有效的AI功能"
+            if is_ajax:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': error_msg
+                })
+            else:
+                messages.error(request, error_msg)
+    
+    # 添加诊断功能
+    if 'check_ollama' in request.GET:
+        try:
+            import requests
+            response = requests.get(getattr(settings, 'OLLAMA_API_URL', 'http://localhost:11434'))
+            if response.status_code == 200:
+                messages.success(request, f"Ollama服务正常运行! 状态: {response.status_code}")
+            else:
+                messages.error(request, f"Ollama服务返回错误代码: {response.status_code}")
+        except Exception as e:
+            messages.error(request, f"无法连接到Ollama服务: {str(e)}")
+        return redirect('learning_logs:ai_assistant', topic_id=topic_id)
     
     return render(request, 'learning_logs/ai_assistant.html', context)
