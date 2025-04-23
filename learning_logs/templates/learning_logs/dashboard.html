@@ -323,7 +323,69 @@
   </div>
 </div>
 
-<div class="row g-3">
+<div class="row mb-4 g-3">
+  <!-- 学习路径 -->
+  <div class="col-md-6">
+    <div class="dashboard-card h-100">
+      <div
+        class="card-header d-flex justify-content-between align-items-center bg-white"
+      >
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-route text-primary me-2"></i>学习路径
+        </h5>
+        <a
+          href="{% url 'learning_logs:learning_paths' %}"
+          class="btn btn-sm btn-outline-primary"
+          >查看全部</a
+        >
+      </div>
+      <div class="card-body">
+        {% if learning_paths %}
+        <div class="list-group list-group-flush">
+          {% for path in learning_paths %}
+          <div class="list-group-item px-3 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">{{ path.title }}</h6>
+                <div class="progress" style="height: 5px; width: 100px">
+                  <div
+                    class="progress-bar bg-success"
+                    role="progressbar"
+                    style="width: {{ path.get_progress }}%;"
+                    aria-valuenow="{{ path.get_progress }}"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                  ></div>
+                </div>
+              </div>
+              <a
+                href="{% url 'learning_logs:learning_path_detail' path.id %}"
+                class="btn btn-sm btn-outline-primary"
+              >
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <div class="mb-3">
+            <i class="fas fa-route fa-3x text-muted"></i>
+          </div>
+          <p class="text-muted mb-3">您还没有创建学习路径。</p>
+          <a
+            href="{% url 'learning_logs:new_learning_path' %}"
+            class="btn btn-primary btn-sm rounded-pill"
+          >
+            <i class="fas fa-plus me-1"></i>创建学习路径
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
   <!-- 最近活动 -->
   <div class="col-md-6">
     <div class="dashboard-card h-100">
@@ -365,7 +427,9 @@
       </div>
     </div>
   </div>
+</div>
 
+<div class="row g-3">
   <!-- 推荐话题 -->
   <div class="col-md-6">
     <div class="dashboard-card h-100">

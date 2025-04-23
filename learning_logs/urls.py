@@ -39,4 +39,15 @@ urlpatterns = [
     path('goals/<int:goal_id>/toggle/', views.toggle_goal, name='toggle_goal'),
     path('topics/<int:topic_id>/start_session/', views.start_session, name='start_session'),
     path('end_session/', views.end_session, name='end_session'),
+    
+    # 学习路径
+    path('learning-paths/', views.learning_paths, name='learning_paths'),
+    path('learning-paths/new/', views.new_learning_path, name='new_learning_path'),
+    path('learning-paths/<int:path_id>/', views.learning_path_detail, name='learning_path_detail'),
+    path('learning-paths/<int:path_id>/delete/', views.delete_learning_path, name='delete_learning_path'),
+    # 路径步骤
+    path('steps/<int:step_id>/', views.step_detail, name='step_detail'),
+    path('steps/<int:step_id>/toggle-completion/', views.toggle_step_completion, name='toggle_step_completion'),
+    # 资源
+    path('resources/<int:resource_id>/toggle-completion/', views.toggle_resource_completion, name='toggle_resource_completion'),
 ]

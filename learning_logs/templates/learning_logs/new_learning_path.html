@@ -1,0 +1,134 @@
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-primary m-0">Create Learning Path</h1>
+    <p class="text-muted">Plan your systematic learning journey</p>
+  </div>
+  <a
+    href="{% url 'learning_logs:learning_paths' %}"
+    class="btn btn-outline-primary"
+  >
+    <i class="fas fa-arrow-left me-2"></i>Back to Paths
+  </a>
+</div>
+{% endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fas fa-route text-primary me-2"></i>Path Details
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            <input
+              type="text"
+              class="form-control"
+              id="id_title"
+              name="title"
+              required
+              placeholder="e.g., Machine Learning Fundamentals"
+            />
+            <div class="form-text">
+              Give your learning path a descriptive name
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="id_description"
+              name="description"
+              rows="4"
+              placeholder="Describe the goals and content of this learning path"
+            ></textarea>
+            <div class="form-text">
+              What will you learn? Why is this path important to you?
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_estimated_hours" class="form-label"
+              >Estimated Hours</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="id_estimated_hours"
+              name="estimated_hours"
+              min="1"
+              value="10"
+            />
+            <div class="form-text">
+              Estimate how many hours you'll need to complete this path
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-2"></i>Create Learning Path
+            </button>
+            <a
+              href="{% url 'learning_logs:learning_paths' %}"
+              class="btn btn-outline-secondary"
+              >Cancel</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-4 bg-light border-0">
+      <div class="card-body">
+        <h6 class="mb-3">
+          <i class="fas fa-lightbulb text-warning me-2"></i>Tips for effective
+          learning paths:
+        </h6>
+        <ul class="mb-0">
+          <li>Break down large subjects into smaller, manageable topics</li>
+          <li>Organize topics in a logical progression</li>
+          <li>Set realistic time estimates for each step</li>
+          <li>Include a mix of theory and practical exercises</li>
+          <li>Review and update your path as you learn</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // Form validation
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function (event) {
+      const title = document.getElementById("id_title").value.trim();
+      const estimatedHours =
+        document.getElementById("id_estimated_hours").value;
+
+      let isValid = true;
+
+      // Validate title
+      if (title.length < 3) {
+        event.preventDefault();
+        isValid = false;
+        alert("Please enter a title with at least 3 characters.");
+      }
+
+      // Validate estimated hours
+      if (estimatedHours < 1) {
+        event.preventDefault();
+        isValid = false;
+        alert("Estimated hours must be at least 1.");
+      }
+
+      return isValid;
+    });
+  });
+</script>
+{% endblock %}

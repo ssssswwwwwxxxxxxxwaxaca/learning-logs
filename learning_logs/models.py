@@ -108,4 +108,63 @@ class StudySession(models.Model):
             self.duration = self.end_time - self.start_time
         super().save(*args, **kwargs)
 
+class LearningPath(models.Model):
+    """用户创建的学习路径"""
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    estimated_hours = models.PositiveIntegerField(default=0)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+    
+    def get_progress(self):
+        """计算学习路径的完成进度"""
+        steps = self.pathstep_set.all()
+        if not steps:
+            return 0
+            
+        completed_steps = steps.filter(is_completed=True).count()
+        return int(completed_steps / steps.count() * 100)
+        
+
+class PathStep(models.Model):
+    """学习路径中的步骤"""
+    path = models.ForeignKey(LearningPath, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=0)
+    description = models.TextField(blank=True)
+    is_completed = models.BooleanField(default=False)
+    estimated_hours = models.PositiveIntegerField(default=1)
+    
+    class Meta:
+        ordering = ['order']
+        
+    def __str__(self):
+        return f"{self.path.title} - Step {self.order}: {self.topic.text}"
+
+
+class StepResource(models.Model):
+    """学习步骤的资源"""
+    TYPE_CHOICES = (
+        ('book', '书籍'),
+        ('video', '视频'),
+        ('article', '文章'),
+        ('exercise', '练习'),
+        ('other', '其他')
+    )
+    
+    step = models.ForeignKey(PathStep, on_delete=models.CASCADE, related_name='resources')
+    title = models.CharField(max_length=200)
+    url = models.URLField(blank=True)
+    resource_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='other')
+    is_completed = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    
+    def __str__(self):
+        return self.title
+
 

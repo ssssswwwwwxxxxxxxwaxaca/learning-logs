@@ -1,0 +1,175 @@
+<!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\step_detail.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-primary m-0">
+      步骤: {{ step.topic.text }}
+    </h1>
+    <p class="text-muted">
+      {{ step.path.title }} 的第 {{ step.order }} 步 {% if step.is_completed
+      %}<span class="badge bg-success ms-2">已完成</span>{% endif %}
+    </p>
+  </div>
+  <div>
+    <a
+      href="{% url 'learning_logs:toggle_step_completion' step.id %}"
+      class="btn btn-{% if step.is_completed %}secondary{% else %}success{% endif %} me-2"
+    >
+      <i
+        class="fas {% if step.is_completed %}fa-times{% else %}fa-check{% endif %} me-1"
+      ></i>
+      {% if step.is_completed %}标记为未完成{% else %}标记为已完成{% endif %}
+    </a>
+
+    <a
+      href="{% url 'learning_logs:learning_path_detail' step.path.id %}"
+      class="btn btn-outline-primary"
+    >
+      <i class="fas fa-arrow-left me-2"></i>返回路径
+    </a>
+  </div>
+</div>
+{% endblock %} {% block content %}
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card shadow border-0 mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">步骤详情</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="text-muted mb-1">所属主题</h6>
+          <p class="mb-0">{{ step.topic.text }}</p>
+        </div>
+
+        <div class="mb-3">
+          <h6 class="text-muted mb-1">预计学习时间</h6>
+          <p class="mb-0">{{ step.estimated_hours }} 小时</p>
+        </div>
+
+        {% if step.description %}
+        <div class="mb-3">
+          <h6 class="text-muted mb-1">步骤描述</h6>
+          <p class="mb-0">{{ step.description }}</p>
+        </div>
+        {% endif %}
+
+        <hr />
+
+        <div class="d-grid">
+          <a
+            href="{% url 'learning_logs:topic' step.topic.id %}"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-book-open me-2"></i>查看主题内容
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加资源表单 -->
+    <div class="card shadow border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">添加学习资源</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_title" class="form-label">资源标题</label>
+            {{ resource_form.title }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_url" class="form-label">资源链接</label>
+            {{ resource_form.url }}
+            <div class="form-text">可以是网页、视频或任何其他在线资源的URL</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_resource_type" class="form-label">资源类型</label>
+            {{ resource_form.resource_type }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_notes" class="form-label">笔记</label>
+            {{ resource_form.notes }}
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>添加资源
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card shadow border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">学习资源</h5>
+      </div>
+      <div class="card-body">
+        {% if resources %}
+        <div class="row g-3">
+          {% for resource in resources %}
+          <div class="col-md-6">
+            <div
+              class="card h-100 {% if resource.is_completed %}border-success{% endif %}"
+            >
+              <div
+                class="card-header d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <i
+                    class="fas {% if resource.resource_type == 'book' %}fa-book {% elif resource.resource_type == 'video' %}fa-video {% elif resource.resource_type == 'article' %}fa-file-alt {% elif resource.resource_type == 'exercise' %}fa-tasks {% else %}fa-link {% endif %} me-2"
+                  ></i>
+                  {{ resource.get_resource_type_display }}
+                </div>
+                <a
+                  href="{% url 'learning_logs:toggle_resource_completion' resource.id %}"
+                  class="btn btn-sm btn-outline-{% if resource.is_completed %}success{% else %}secondary{% endif %}"
+                >
+                  <i
+                    class="fas {% if resource.is_completed %}fa-check{% else %}fa-hourglass{% endif %}"
+                  ></i>
+                </a>
+              </div>
+              <div class="card-body">
+                <h5 class="card-title">{{ resource.title }}</h5>
+                {% if resource.url %}
+                <a
+                  href="{{ resource.url }}"
+                  target="_blank"
+                  class="btn btn-sm btn-outline-primary mb-2"
+                >
+                  <i class="fas fa-external-link-alt me-1"></i>访问链接
+                </a>
+                {% endif %} {% if resource.notes %}
+                <div class="card-text small text-muted">
+                  {{ resource.notes }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <div class="mb-3">
+            <i class="fas fa-bookmark fa-3x text-muted"></i>
+          </div>
+          <p class="mb-0">
+            此步骤还没有添加学习资源。使用左侧表单添加书籍、视频、文章或其他有用的资源！
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
