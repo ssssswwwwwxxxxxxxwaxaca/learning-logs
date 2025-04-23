@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout as auth_logout
 from .models import CustomUser  # 导入自定义用户模型
 from .forms import CustomUserChangeForm, CustomUserCreationForm  # 合并导入
-
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
@@ -56,3 +58,23 @@ def user_login(request):
         else:
             return render(request, 'accounts/login.html', {'error': '用户名或密码错误'})
     return render(request, 'accounts/login.html')
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # 保持用户登录状态
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('accounts:profile')  # 重定向到用户的个人资料页面
+        else:
+            # 表单无效时的处理
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            
+            messages.error(request, "Please correct the errors below: " + ", ".join(error_messages))
+    
+    # 对于非POST请求或表单无效的情况，重定向到个人资料页面
+    return redirect('accounts:profile')

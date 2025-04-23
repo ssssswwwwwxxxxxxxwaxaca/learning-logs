@@ -146,6 +146,40 @@
     font-size: 0.875rem;
     color: #6c757d;
   }
+
+  /* 密码强度指示器样式 */
+  .password-strength {
+    height: 5px;
+    border-radius: 5px;
+    transition: all 0.3s;
+  }
+
+  .password-strength.weak {
+    width: 30%;
+    background-color: var(--danger-color);
+  }
+
+  .password-strength.medium {
+    width: 60%;
+    background-color: var(--warning-color);
+  }
+
+  .password-strength.strong {
+    width: 100%;
+    background-color: var(--secondary-color);
+  }
+
+  .password-match {
+    font-size: 0.8rem;
+  }
+
+  .password-match.matched {
+    color: var(--secondary-color);
+  }
+
+  .password-match.not-matched {
+    color: var(--danger-color);
+  }
 </style>
 {% endblock %} {% block page_header %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -159,6 +193,26 @@
 </div>
 {% endblock %} {% block content %}
 <div class="profile-container">
+  <!-- 显示消息通知 -->
+  {% if messages %}
+  <div class="messages mb-4">
+    {% for message in messages %}
+    <div
+      class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show"
+      role="alert"
+    >
+      {{ message }}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div class="card shadow border-0">
     <!-- 个人资料头部 -->
     <div class="profile-header">
@@ -227,6 +281,92 @@
         </div>
       </div>
 
+      <!-- 密码修改表单 -->
+      <div class="profile-info-item">
+        <div class="profile-info-label">
+          <i class="fas fa-lock me-2 text-primary"></i>
+          Password
+        </div>
+        <div class="profile-info-value">
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            data-bs-toggle="collapse"
+            data-bs-target="#changePasswordForm"
+            aria-expanded="false"
+          >
+            <i class="fas fa-key me-1"></i> Change Password
+          </button>
+
+          <div class="collapse mt-3" id="changePasswordForm">
+            <div class="card card-body border-0 bg-light">
+              <form
+                method="post"
+                action="{% url 'accounts:change_password' %}"
+                id="passwordForm"
+              >
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="current_password" class="form-label"
+                    >Current Password</label
+                  >
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="current_password"
+                    name="current_password"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="new_password1" class="form-label"
+                    >New Password</label
+                  >
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="new_password1"
+                    name="new_password1"
+                    required
+                  />
+                  <div class="password-strength mt-1"></div>
+                </div>
+                <div class="mb-3">
+                  <label for="new_password2" class="form-label"
+                    >Confirm New Password</label
+                  >
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="new_password2"
+                    name="new_password2"
+                    required
+                  />
+                  <div class="password-match mt-1"></div>
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary me-2"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#changePasswordForm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    id="changePasswordBtn"
+                  >
+                    <i class="fas fa-save me-1"></i> Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 头像上传表单 -->
       <div class="avatar-upload-container">
         <h6 class="avatar-upload-title">
@@ -263,6 +403,88 @@
     const fileName = input.files[0]?.name || "No file chosen";
     document.getElementById("file-name").textContent = fileName;
   }
+
+  // 密码强度检查
+  const passwordInput = document.getElementById("new_password1");
+  const confirmInput = document.getElementById("new_password2");
+  const strengthIndicator = document.querySelector(".password-strength");
+  const matchIndicator = document.querySelector(".password-match");
+  const submitBtn = document.getElementById("changePasswordBtn");
+
+  if (passwordInput) {
+    passwordInput.addEventListener("input", function () {
+      const password = this.value;
+      let strength = 0;
+
+      // 检查长度
+      if (password.length >= 8) strength += 1;
+
+      // 检查是否包含数字和字母
+      if (/[0-9]/.test(password) && /[a-zA-Z]/.test(password)) strength += 1;
+
+      // 检查是否包含特殊字符
+      if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+
+      // 更新强度指示器
+      strengthIndicator.className = "password-strength";
+      if (password.length === 0) {
+        strengthIndicator.style.width = "0";
+      } else if (strength === 1) {
+        strengthIndicator.classList.add("weak");
+      } else if (strength === 2) {
+        strengthIndicator.classList.add("medium");
+      } else {
+        strengthIndicator.classList.add("strong");
+      }
+
+      // 检查密码匹配
+      checkPasswordMatch();
+    });
+  }
+
+  if (confirmInput) {
+    confirmInput.addEventListener("input", checkPasswordMatch);
+  }
+
+  function checkPasswordMatch() {
+    if (!confirmInput.value) {
+      matchIndicator.textContent = "";
+      matchIndicator.className = "password-match";
+      return;
+    }
+
+    if (passwordInput.value === confirmInput.value) {
+      matchIndicator.textContent = "Passwords match";
+      matchIndicator.className = "password-match matched";
+      submitBtn.disabled = false;
+    } else {
+      matchIndicator.textContent = "Passwords do not match";
+      matchIndicator.className = "password-match not-matched";
+      submitBtn.disabled = true;
+    }
+  }
+
+  // 表单提交前验证
+  document
+    .getElementById("passwordForm")
+    ?.addEventListener("submit", function (e) {
+      const password1 = passwordInput.value;
+      const password2 = confirmInput.value;
+
+      if (password1 !== password2) {
+        e.preventDefault();
+        alert("Passwords do not match!");
+        return false;
+      }
+
+      if (password1.length < 8) {
+        e.preventDefault();
+        alert("Password must be at least 8 characters long");
+        return false;
+      }
+
+      return true;
+    });
 
   // 为了支持 timesince 过滤器的分割
   if (!String.prototype.split) {
