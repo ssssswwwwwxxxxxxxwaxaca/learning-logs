@@ -1,0 +1,452 @@
+<!-- learning_logs/templates/learning_logs/dashboard.html -->
+{% extends "learning_logs/base.html" %} {% block extra_css %}
+<style>
+  /* 主题色变量 */
+  :root {
+    --primary-color: #4e73df;
+    --secondary-color: #1cc88a;
+    --accent-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-bg: #f8f9fc;
+  }
+
+  /* 卡片阴影和过渡效果 */
+  .dashboard-card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.15);
+  }
+
+  /* 卡片标题样式 */
+  .card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 1.25rem;
+  }
+
+  /* 统计卡片样式 */
+  .stat-card {
+    color: white;
+    border-left: 0.25rem solid;
+    border-radius: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card.topics-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+    border-left-color: #224abe;
+  }
+
+  .stat-card.entries-card {
+    background: linear-gradient(
+      135deg,
+      var(--secondary-color) 0%,
+      #169a6b 100%
+    );
+    border-left-color: #169a6b;
+  }
+
+  .stat-card.time-card {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #258391 100%);
+    border-left-color: #258391;
+  }
+
+  .stat-card .stat-icon {
+    position: absolute;
+    right: 1rem;
+    bottom: 0;
+    opacity: 0.15;
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  /* 进度条样式 */
+  .progress {
+    height: 0.6rem;
+    border-radius: 1rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    background: linear-gradient(90deg, var(--secondary-color) 0%, #169a6b 100%);
+    border-radius: 1rem;
+    transition: width 1s ease-in-out;
+  }
+
+  /* 目标项样式 */
+  .goal-item {
+    border-left: 4px solid var(--warning-color);
+    background-color: rgba(246, 194, 62, 0.05);
+    transition: all 0.2s ease;
+  }
+
+  .goal-item:hover {
+    background-color: rgba(246, 194, 62, 0.1);
+  }
+
+  .goal-item.completed {
+    border-left-color: var(--secondary-color);
+    background-color: rgba(28, 200, 138, 0.05);
+  }
+
+  .goal-item.completed:hover {
+    background-color: rgba(28, 200, 138, 0.1);
+  }
+
+  /* 活动列表样式 */
+  .activity-item {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .activity-item:hover {
+    border-left-color: var(--primary-color);
+    background-color: rgba(78, 115, 223, 0.05);
+  }
+
+  /* 按钮样式 */
+  .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .btn-success {
+    background-color: var(--secondary-color);
+    border-color: var (--secondary-color);
+  }
+
+  .btn-outline-success {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+</style>
+{% endblock %} {% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-primary m-0">Learning Dashboard</h1>
+    <p class="text-muted">Welcome back, {{ request.user.username }}!</p>
+  </div>
+  <a
+    href="{% url 'learning_logs:goals' %}"
+    class="btn btn-primary rounded-pill px-4 shadow-sm"
+  >
+    <i class="fas fa-flag me-2"></i>Manage Goals
+  </a>
+</div>
+{% endblock %} {% block content %}
+<div class="row mb-4 g-3">
+  <!-- 统计卡片 -->
+  <div class="col-md-4">
+    <div class="dashboard-card stat-card topics-card h-100">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <h6 class="text-white-50 text-uppercase mb-1 small fw-bold">
+              Topics
+            </h6>
+            <h2 class="display-4 fw-bold mb-0">{{ topic_count }}</h2>
+          </div>
+        </div>
+        <i class="fas fa-book stat-icon"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="dashboard-card stat-card entries-card h-100">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <h6 class="text-white-50 text-uppercase mb-1 small fw-bold">
+              Entries
+            </h6>
+            <h2 class="display-4 fw-bold mb-0">{{ entry_count }}</h2>
+          </div>
+        </div>
+        <i class="fas fa-clipboard-list stat-icon"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="dashboard-card stat-card time-card h-100">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <h6 class="text-white-50 text-uppercase mb-1 small fw-bold">
+              Study Time
+            </h6>
+            <h2 class="display-4 fw-bold mb-0">
+              {{total_study_time.days}}d {{study_hours}}h
+            </h2>
+            <p class="mb-0">{{study_minutes}}m</p>
+          </div>
+        </div>
+        <i class="fas fa-clock stat-icon"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4 g-3">
+  <!-- 学习目标 -->
+  <div class="col-md-6">
+    <div class="dashboard-card h-100">
+      <div
+        class="card-header d-flex justify-content-between align-items-center bg-white"
+      >
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-bullseye text-primary me-2"></i>Learning Goals
+        </h5>
+        <span class="badge bg-primary rounded-pill">{{ goals|length }}</span>
+      </div>
+      <div class="card-body">
+        {% if goals %}
+        <div class="list-group list-group-flush">
+          {% for goal in goals %}
+          <div
+            class="list-group-item goal-item {% if goal.completed %}completed{% endif %} px-3 py-3 d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <h6 class="mb-1 fw-bold">{{ goal.title }}</h6>
+              <div class="d-flex align-items-center">
+                <i class="far fa-calendar-alt text-muted me-2"></i>
+                <small class="text-muted"
+                  >{{ goal.days_remaining }} days remaining</small
+                >
+              </div>
+            </div>
+            <a
+              href="{% url 'learning_logs:toggle_goal' goal.id %}"
+              class="btn btn-sm {% if goal.completed %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill"
+            >
+              {% if goal.completed %}
+              <i class="fas fa-check me-1"></i>Completed {% else %} Mark
+              Complete {% endif %}
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <div class="mb-3">
+            <i class="far fa-flag fa-3x text-muted"></i>
+          </div>
+          <p class="text-muted mb-3">No active goals.</p>
+          <a
+            href="{% url 'learning_logs:goals' %}"
+            class="btn btn-primary btn-sm rounded-pill"
+          >
+            <i class="fas fa-plus me-1"></i>Set a goal
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 话题进度 -->
+  <div class="col-md-6">
+    <div class="dashboard-card h-100">
+      <div
+        class="card-header d-flex justify-content-between align-items-center bg-white"
+      >
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-chart-line text-secondary me-2"></i>Topic Progress
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if topics_progress %} {% for topic in topics_progress %}
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="mb-0">
+              <a
+                href="{% url 'learning_logs:topic' topic.id %}"
+                class="text-decoration-none"
+              >
+                {{ topic.text }}
+              </a>
+            </h6>
+            <div class="d-flex align-items-center">
+              <span class="badge bg-light text-dark me-2"
+                >{{ topic.completed_items }}/{{ topic.total_items }}</span
+              >
+              <span
+                class="badge {% if topic.progress_percentage > 75 %}bg-success{% elif topic.progress_percentage > 25 %}bg-warning{% else %}bg-danger{% endif %}"
+              >
+                {{ topic.progress_percentage }}%
+              </span>
+            </div>
+          </div>
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: {{ topic.progress_percentage }}%"
+              aria-valuenow="{{ topic.progress_percentage }}"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="text-center py-4">
+          <div class="mb-3">
+            <i class="fas fa-chart-bar fa-3x text-muted"></i>
+          </div>
+          <p class="text-muted mb-3">No topics available.</p>
+          <a
+            href="{% url 'learning_logs:new_topic' %}"
+            class="btn btn-secondary btn-sm rounded-pill"
+          >
+            <i class="fas fa-plus me-1"></i>Add a topic
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- 最近活动 -->
+  <div class="col-md-6">
+    <div class="dashboard-card h-100">
+      <div
+        class="card-header d-flex justify-content-between align-items-center bg-white"
+      >
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-history text-accent me-2"></i>Recent Activity
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if recent_entries %}
+        <div class="list-group list-group-flush">
+          {% for entry in recent_entries %}
+          <a
+            href="{% url 'learning_logs:topic' entry.topic.id %}"
+            class="list-group-item activity-item list-group-item-action px-3 py-3"
+          >
+            <div class="d-flex w-100 justify-content-between align-items-start">
+              <h6 class="mb-1 fw-bold">{{ entry.topic.text }}</h6>
+              <small class="text-muted badge bg-light"
+                >{{ entry.date_added|date:"M d, Y" }}</small
+              >
+            </div>
+            <p class="mb-1 text-muted small">
+              {{ entry.text|truncatechars:100 }}
+            </p>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <div class="mb-3">
+            <i class="far fa-clock fa-3x text-muted"></i>
+          </div>
+          <p class="text-muted mb-0">No recent activity.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 推荐话题 -->
+  <div class="col-md-6">
+    <div class="dashboard-card h-100">
+      <div
+        class="card-header d-flex justify-content-between align-items-center bg-white"
+      >
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-lightbulb text-warning me-2"></i>Recommended Topics
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if popular_topics %}
+        <div class="list-group list-group-flush">
+          {% for topic in popular_topics %}
+          <div class="list-group-item p-3">
+            <div class="d-flex w-100 justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1 fw-bold">{{ topic.text }}</h6>
+                <div class="d-flex align-items-center text-muted small">
+                  <i class="fas fa-file-alt me-1"></i>
+                  <span>{{ topic.entry_set.count }} entries</span>
+                  {% if topic.progress_percentage %}
+                  <span class="mx-2">•</span>
+                  <i class="fas fa-tasks me-1"></i>
+                  <span>{{ topic.progress_percentage }}% completed</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="btn-group">
+                <a
+                  href="{% url 'learning_logs:topic' topic.id %}"
+                  class="btn btn-sm btn-outline-primary rounded-pill me-1"
+                >
+                  <i class="fas fa-eye me-1"></i>View
+                </a>
+                <a
+                  href="{% url 'learning_logs:start_session' topic.id %}"
+                  class="btn btn-sm btn-success rounded-pill"
+                >
+                  <i class="fas fa-play me-1"></i>Study
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <div class="mb-3">
+            <i class="far fa-lightbulb fa-3x text-muted"></i>
+          </div>
+          <p class="text-muted mb-0">Add more topics to get recommendations.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script
+  src="https://kit.fontawesome.com/yourcode.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  // 添加进度条动画
+  document.addEventListener("DOMContentLoaded", function () {
+    // 滚动时显示进度条动画
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.style.width =
+            entry.target.getAttribute("aria-valuenow") + "%";
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+
+    document.querySelectorAll(".progress-bar").forEach((bar) => {
+      bar.style.width = "0%";
+      observer.observe(bar);
+    });
+  });
+</script>
+{% endblock %}

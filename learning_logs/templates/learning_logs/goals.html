@@ -1,0 +1,172 @@
+<!-- learning_logs/templates/learning_logs/goals.html -->
+{% extends "learning_logs/base.html" %} {% block page_header %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="display-5">Learning Goals</h1>
+  <a
+    href="{% url 'learning_logs:dashboard' %}"
+    class="btn btn-outline-secondary"
+    >Back to Dashboard</a
+  >
+</div>
+{% endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Add New Goal</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'learning_logs:goals' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="title" class="form-label">Goal Title</label>
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              name="title"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="target_date" class="form-label">Target Date</label>
+            <input
+              type="date"
+              class="form-control"
+              id="target_date"
+              name="target_date"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Goal</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Your Goals</h5>
+      </div>
+      <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="goalTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link active"
+              id="active-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#active"
+              type="button"
+            >
+              Active Goals
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link"
+              id="completed-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#completed"
+              type="button"
+            >
+              Completed Goals
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="goalTabContent">
+          <div class="tab-pane fade show active" id="active">
+            {% if goals %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Goal</th>
+                  <th>Description</th>
+                  <th>Target Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for goal in goals %} {% if not goal.completed %}
+                <tr>
+                  <td>{{ goal.title }}</td>
+                  <td>{{ goal.description }}</td>
+                  <td>{{ goal.target_date }}</td>
+                  <td>
+                    {% if goal.days_remaining > 0 %}
+                    <span class="badge bg-info"
+                      >{{ goal.days_remaining }} days left</span
+                    >
+                    {% elif goal.days_remaining == 0 %}
+                    <span class="badge bg-warning">Due today</span>
+                    {% else %}
+                    <span class="badge bg-danger">Overdue</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a
+                      href="{% url 'learning_logs:toggle_goal' goal.id %}"
+                      class="btn btn-sm btn-success"
+                      >Complete</a
+                    >
+                  </td>
+                </tr>
+                {% endif %} {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No active goals.</p>
+            {% endif %}
+          </div>
+
+          <div class="tab-pane fade" id="completed">
+            {% if goals %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Goal</th>
+                  <th>Description</th>
+                  <th>Target Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for goal in goals %} {% if goal.completed %}
+                <tr>
+                  <td>{{ goal.title }}</td>
+                  <td>{{ goal.description }}</td>
+                  <td>{{ goal.target_date }}</td>
+                  <td>
+                    <a
+                      href="{% url 'learning_logs:toggle_goal' goal.id %}"
+                      class="btn btn-sm btn-outline-success"
+                      >Mark Incomplete</a
+                    >
+                  </td>
+                </tr>
+                {% endif %} {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No completed goals.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

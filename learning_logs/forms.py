@@ -12,10 +12,16 @@ class TopicForm(forms.ModelForm):
 
 class EntryForm(forms.ModelForm):
     class Meta:
-        model=Entry
-        fields=['text']
-        labels={'text':''}
-        widgets={'text':forms.Textarea(attrs={'cols':80})}
+        model = Entry
+        fields = ['text', 'completed']
+        widgets = {
+            'text': forms.Textarea(attrs={'cols': 80}),
+            'completed': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'text': 'Entry:',
+            'completed': '标记为已完成',
+        }
 
 
 class CommentForm(forms.ModelForm):

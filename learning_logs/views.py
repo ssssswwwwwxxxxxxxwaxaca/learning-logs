@@ -1,9 +1,12 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Topic, Entry, Comment
+from .models import Topic, Entry, Comment,StudySession,LearningGoal
 from .forms import TopicForm, EntryForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
-from django.db.models import Q
+from django.db.models import Q, Count, Sum, Avg
+from django.utils import timezone
+from datetime import timedelta
 app_name = 'learning_logs'
 # Create your views here.
 def index(request):
@@ -18,15 +21,32 @@ def topics(request):
     return render(request,'learning_logs/topics.html',context)
 
 @login_required
-def topic(request,topic_id):
-    #显示单个主题及其所有的条目
-    topic=Topic.objects.get(id=topic_id)
-    #确认请求的主题是否属于当前的用户
-    if topic.owner!=request.user:
-        raise Http404
-    entries=topic.entry_set.order_by('-date_added')#按照降序排序 优先显示最近的添加条目
-    context={'topic':topic,'entries':entries}
-    return render(request,'learning_logs/topic.html',context)
+def topic(request, topic_id):
+    """显示单个主题及其所有条目"""
+    topic = get_object_or_404(Topic, id=topic_id)
+    # 确认请求的用户是主题所有者
+    check_topic_owner(topic, request.user)
+    
+    entries = topic.entry_set.order_by('-date_added')
+    
+    # 更新主题进度
+    topic.update_progress()
+    
+    # 检查是否有活动的学习会话
+    active_session = None
+    session_id = request.session.get('active_session_id')
+    if session_id:
+        try:
+            active_session = StudySession.objects.get(id=session_id, user=request.user)
+        except StudySession.DoesNotExist:
+            pass
+    
+    context = {
+        'topic': topic, 
+        'entries': entries,
+        'active_session': active_session,
+    }
+    return render(request, 'learning_logs/topic.html', context)
 
 @login_required
 def new_entry(request, topic_id):
@@ -136,3 +156,129 @@ def delete_topic(request, topic_id):
         topic.delete()
         return redirect('learning_logs:topics')
     return redirect('learning_logs:topics')
+
+@login_required
+def dashboard(request):
+    """显示用户的学习仪表盘"""
+    # 获取用户的话题和条目统计
+    topics = Topic.objects.filter(owner=request.user)
+    topic_count = topics.count()
+    entry_count = Entry.objects.filter(topic__in=topics).count()
+    
+    # 获取最近活动
+    recent_entries = Entry.objects.filter(
+        topic__in=topics
+    ).order_by('-date_added')[:5]
+    # 计算总学习时间
+    total_study_time=StudySession.objects.filter(
+        user=request.user
+    ).aggregate(total=Sum('duration'))['total'] or timedelta(0)
+    #计算学习的小时和分钟
+    total_study_time=total_study_time.total_seconds()
+    total_hours=total_study_time//3600
+    total_minutes=(total_study_time%3600)//60
+    
+    # 获取学习目标
+    goals=LearningGoal.objects.filter(
+        user=request.user,
+        completed=False,
+        target_date__gte=timezone.now().date()
+    ).order_by('target_date')[:3]
+    
+    
+    # 话题完成进度数据
+    topics_progress = topics.annotate(
+        entry_count=Count('entry')
+    ).order_by('-date_added')[:5]
+    
+    # 计算推荐话题（基于用户最常学习的话题）
+    popular_topics = topics.annotate(
+        session_count=Count('study_sessions')
+    ).order_by('-session_count')[:3]
+    
+    if not popular_topics:
+        popular_topics = topics.order_by('-date_added')[:3]
+    
+    context = {
+        'topic_count': topic_count,
+        'entry_count': entry_count,
+        'recent_entries': recent_entries,
+        'total_study_time': total_study_time,
+        'total_hours': total_hours,
+        'total_minutes': total_minutes,
+        'goals': goals,
+        'topics_progress': topics_progress,
+        'popular_topics': popular_topics,
+    }
+    
+    return render(request, 'learning_logs/dashboard.html', context)
+
+@login_required
+def goals(request):
+    """管理学习目标"""
+    if request.method == 'POST':
+        # 处理目标添加
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        target_date = request.POST.get('target_date')
+        
+        if title and target_date:
+            LearningGoal.objects.create(
+                user=request.user,
+                title=title,
+                description=description,
+                target_date=target_date
+            )
+    
+    # 获取所有目标
+    goals = LearningGoal.objects.filter(user=request.user).order_by('target_date')
+    
+    context = {'goals': goals}
+    return render(request, 'learning_logs/goals.html', context)
+
+@login_required
+def toggle_goal(request, goal_id):
+    """切换目标完成状态"""
+    goal = LearningGoal.objects.get(id=goal_id, user=request.user)
+    goal.completed = not goal.completed
+    goal.save()
+    return redirect('learning_logs:goals')
+
+@login_required
+def start_session(request, topic_id):
+    """开始一个学习会话"""
+    topic = Topic.objects.get(id=topic_id, owner=request.user)
+    
+    # 创建一个新会话
+    session = StudySession.objects.create(
+        user=request.user,
+        topic=topic,
+        start_time=timezone.now(),
+        end_time=timezone.now()  # 将在结束时更新
+    )
+    
+    request.session['active_session_id'] = session.id
+    return redirect('learning_logs:topic', topic_id=topic.id)
+
+@login_required
+def end_session(request):
+    """结束当前学习会话"""
+    session_id = request.session.get('active_session_id')
+    if session_id:
+        try:
+            session = StudySession.objects.get(id=session_id, user=request.user)
+            session.end_time = timezone.now()
+            session.save()  # 这将触发 save 方法计算 duration
+            del request.session['active_session_id']
+            
+            # 提供反馈消息
+            messages.success(request, f"学习会话已结束，持续了 {session.duration}")
+        except StudySession.DoesNotExist:
+            messages.error(request, "找不到活动的学习会话")
+    
+    return redirect('learning_logs:dashboard')
+
+def check_topic_owner(topic, user):
+    """检查主题是否属于当前用户"""
+    if topic.owner != user:
+        raise Http404("您没有权限访问该话题")

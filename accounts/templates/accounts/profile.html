@@ -1,58 +1,274 @@
-{% extends "learning_logs/base.html" %} {% block page_header %}
-<div class="p-4 mb-4 bg-light border rounded-3">
-  <h1 class="display-5 text-center">Profile</h1>
+{% extends "learning_logs/base.html" %} {% block extra_css %}
+<style>
+  .profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 2.5rem 2rem;
+    position: relative;
+    color: white;
+    margin-bottom: 5rem;
+    overflow: hidden;
+  }
+
+  .profile-header::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: white;
+    clip-path: ellipse(50% 60% at 50% 0%);
+  }
+
+  .profile-avatar-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    margin-top: -75px;
+    z-index: 10;
+    border: 5px solid white;
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background-color: #f3f4f6;
+  }
+
+  .profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+  }
+
+  .profile-info {
+    padding: 1rem 2rem 2rem;
+  }
+
+  .profile-info-item {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+  }
+
+  .profile-info-item:last-child {
+    border-bottom: none;
+  }
+
+  .profile-info-label {
+    min-width: 120px;
+    color: #6c757d;
+    font-weight: 600;
+  }
+
+  .profile-info-value {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .profile-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .stat-item {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+
+  .stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .avatar-upload-container {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border: 1px dashed rgba(0, 0, 0, 0.125);
+  }
+
+  .avatar-upload-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .avatar-upload-title i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+  }
+
+  .custom-file-upload {
+    border: 2px solid var(--primary-color);
+    border-radius: 0.5rem;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--primary-color);
+    background-color: white;
+  }
+
+  .custom-file-upload:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .file-name {
+    margin-left: 1rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+</style>
+{% endblock %} {% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="display-5 fw-bold text-primary m-0">Your Profile</h1>
+    <p class="text-muted">Update your personal information</p>
+  </div>
+  <a href="{% url 'learning_logs:dashboard' %}" class="btn btn-outline-primary">
+    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+  </a>
 </div>
 {% endblock %} {% block content %}
-<div class="card shadow-sm mx-auto" style="max-width: 600px">
-  <div class="card-body">
-    <h5 class="card-title text-center mb-4">User Information</h5>
+<div class="profile-container">
+  <div class="card shadow border-0">
+    <!-- 个人资料头部 -->
+    <div class="profile-header">
+      <h2 class="text-center mb-0">{{ user.username }}</h2>
+      <p class="text-center text-white-50">
+        Member since {{ user.date_joined|date:"F j, Y" }}
+      </p>
+    </div>
 
-    <!-- 头像预览 -->
-    <div class="d-flex justify-content-center mb-4">
+    <!-- 头像 -->
+    <div class="profile-avatar-wrapper">
       {% if user.avatar_url %}
       <img
         src="{{ user.avatar_url.url }}?{{ user.date_joined|date:'U' }}"
         alt="User Avatar"
-        class="rounded-circle"
-        style="width: 120px; height: 120px; object-fit: cover"
+        class="profile-avatar"
       />
       {% else %}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="120"
-        height="120"
-        fill="gray"
-        viewBox="0 0 16 16"
-      >
-        <circle cx="8" cy="8" r="8" />
-      </svg>
+      <div class="profile-avatar-placeholder">
+        {{ user.username|make_list|first|upper }}
+      </div>
       {% endif %}
     </div>
 
-    <!-- 用户信息 -->
-    <p class="card-text"><strong>Username:</strong> {{ user.username }}</p>
-    <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
-    <p class="card-text">
-      <strong>Joined on:</strong> {{ user.date_joined|date:"F j, Y" }}
-    </p>
-    <p>Avatar Path: {{ user.avatar_url }}</p>
-    <p>Avatar URL: {{ user.avatar_url.url }}</p>
-
-    <!-- 头像上传表单 -->
-    <form method="post" enctype="multipart/form-data" class="mt-4">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="avatar" class="form-label">Upload Avatar</label>
-        <input
-          type="file"
-          class="form-control"
-          id="avatar"
-          name="avatar_url"
-          accept="image/*"
-        />
+    <!-- 统计数据 -->
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-value">{{ user.topic_set.count }}</div>
+        <div class="stat-label">Topics</div>
       </div>
-      <button type="submit" class="btn btn-primary">Save Changes</button>
-    </form>
+      <div class="stat-item">
+        <div class="stat-value">{{ user.comment_set.count }}</div>
+        <div class="stat-label">Comments</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{user.date_joined|date:"d"}} days</div>
+        <div class="stat-label">Days Registered</div>
+      </div>
+    </div>
+
+    <!-- 用户信息 -->
+    <div class="profile-info">
+      <div class="profile-info-item">
+        <div class="profile-info-label">
+          <i class="fas fa-user me-2 text-primary"></i>
+          Username
+        </div>
+        <div class="profile-info-value">{{ user.username }}</div>
+      </div>
+
+      <div class="profile-info-item">
+        <div class="profile-info-label">
+          <i class="fas fa-envelope me-2 text-primary"></i>
+          Email
+        </div>
+        <div class="profile-info-value">{{ user.email }}</div>
+      </div>
+
+      <div class="profile-info-item">
+        <div class="profile-info-label">
+          <i class="fas fa-calendar me-2 text-primary"></i>
+          Joined on
+        </div>
+        <div class="profile-info-value">
+          {{ user.date_joined|date:"F j, Y" }}
+        </div>
+      </div>
+
+      <!-- 头像上传表单 -->
+      <div class="avatar-upload-container">
+        <h6 class="avatar-upload-title">
+          <i class="fas fa-image"></i>
+          Update Your Avatar
+        </h6>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="avatar" class="custom-file-upload">
+              <i class="fas fa-upload me-2"></i>Choose File
+            </label>
+            <input
+              type="file"
+              class="form-control d-none"
+              id="avatar"
+              name="avatar_url"
+              accept="image/*"
+              onchange="updateFileName(this)"
+            />
+            <span class="file-name" id="file-name">No file chosen</span>
+          </div>
+          <button type="submit" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
+{% endblock %} {% block extra_js %}
+<script>
+  function updateFileName(input) {
+    const fileName = input.files[0]?.name || "No file chosen";
+    document.getElementById("file-name").textContent = fileName;
+  }
+
+  // 为了支持 timesince 过滤器的分割
+  if (!String.prototype.split) {
+    String.prototype.split = function (separator, limit) {
+      return this.toString().split(separator, limit);
+    };
+  }
+</script>
 {% endblock %}

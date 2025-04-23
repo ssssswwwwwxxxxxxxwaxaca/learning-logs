@@ -5,10 +5,202 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Learning Log</title>
     {% load django_bootstrap5 %} {% bootstrap_css %} {% bootstrap_javascript %}
+    <!-- 添加 Font Awesome 图标 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #4e73df;
+        --secondary-color: #1cc88a;
+        --accent-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --dark-color: #5a5c69;
+        --light-color: #f8f9fc;
+        --border-radius: 0.35rem;
+        --box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        --transition: all 0.2s ease-in-out;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f8f9fc;
+        color: #5a5c69;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* 导航栏样式 */
+      .navbar {
+        background-color: white !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 0.75rem 1rem;
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        color: var(--primary-color) !important;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .navbar-brand:before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 24px;
+        background: var(--primary-color);
+        margin-right: 10px;
+        border-radius: 3px;
+      }
+
+      .nav-link {
+        font-weight: 500;
+        color: var(--dark-color) !important;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: var(--primary-color) !important;
+        background-color: rgba(78, 115, 223, 0.05);
+      }
+
+      /* 搜索框样式 */
+      .search-form {
+        position: relative;
+        max-width: 300px;
+      }
+
+      .search-input {
+        border-radius: 50px;
+        padding-left: 2.5rem;
+        border: 1px solid #e3e6f0;
+        transition: var(--transition);
+      }
+
+      .search-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.1);
+        border-color: #bac8f3;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #d1d3e2;
+        pointer-events: none;
+      }
+
+      .search-btn {
+        border-radius: 50px;
+        padding: 0.375rem 1rem;
+      }
+
+      /* 用户头像区域 */
+      .avatar-container {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+      }
+
+      .avatar-container:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .avatar-text {
+        color: var(--dark-color);
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+
+      /* 按钮样式 */
+      .btn {
+        font-weight: 500;
+        border-radius: var(--border-radius);
+        padding: 0.375rem 1rem;
+        transition: var(--transition);
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-success {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      /* 主内容区域 */
+      main {
+        flex: 1;
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+      }
+
+      .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      /* 页脚 */
+      footer {
+        background-color: white;
+        padding: 1rem 0;
+        margin-top: 2rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        font-size: 0.875rem;
+      }
+
+      /* 响应式调整 */
+      @media (max-width: 768px) {
+        .search-form {
+          margin: 0.5rem 0;
+          max-width: 100%;
+        }
+
+        .avatar-container {
+          padding: 0.5rem 0;
+        }
+
+        .navbar-collapse {
+          padding: 1rem 0;
+        }
+      }
+    </style>
+    {% block extra_css %}{% endblock extra_css %}
   </head>
   <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-light mb-4 border">
-      <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white">
+      <div class="container">
         <a class="navbar-brand" href="{% url 'learning_logs:index' %}">
           Learning Log
         </a>
@@ -24,93 +216,115 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
-          <ul class="navbar-nav me-auto mb-2 mb-md-0">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'learning_logs:topics' %}">
-                Topics
+              <a
+                class="nav-link {% if request.resolver_match.url_name == 'topics' %}active{% endif %}"
+                href="{% url 'learning_logs:topics' %}"
+              >
+                <i class="fas fa-folder me-1"></i>Topics
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                href="{% url 'learning_logs:dashboard' %}"
+              >
+                <i class="fas fa-chart-line me-1"></i>Dashboard
               </a>
             </li>
           </ul>
 
           <!-- 搜索表单 -->
           <form
-            class="d-flex ms-auto"
+            class="search-form d-flex mx-lg-auto"
             action="{% url 'learning_logs:search' %}"
             method="get"
           >
+            <span class="search-icon">
+              <i class="fas fa-search"></i>
+            </span>
             <input
-              class="form-control me-2"
+              class="form-control search-input me-2"
               type="search"
               name="q"
               placeholder="Search topics or entries"
               aria-label="Search"
             />
-            <button class="btn btn-outline-success" type="submit">
+            <button class="btn btn-outline-primary search-btn" type="submit">
               Search
             </button>
           </form>
 
-          <ul class="navbar-nav ms-auto mb-2 mb-md-0 d-flex align-items-center">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             {% if user.is_authenticated %}
-            <!-- 用户信息区块（新增头像） -->
-            <li class="nav-item me-3 d-flex align-items-center">
-              {% if user.avatar_url %}
-              <img
-                src="{{ user.avatar_url.url }}?{{ user.date_joined|date:'U' }}"
-                alt="Avatar"
-                class="rounded-circle me-2"
-                style="width: 32px; height: 32px; object-fit: cover"
-              />
-              {% else %}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="gray"
-                class="bi me-2"
-                viewBox="0 0 16 16"
-              >
-                <circle cx="8" cy="8" r="8" />
-              </svg>
-              {% endif %}
-              <span class="navbar-text">
-                Hello, <strong>{{ user.username }}</strong>
-              </span>
-            </li>
-
-            <li class="nav-item me-2">
+            <!-- 用户信息区块 -->
+            <li class="nav-item dropdown">
               <a
-                class="nav-link btn btn-outline-primary btn-sm"
-                href="{% url 'accounts:profile' %}"
+                class="nav-link dropdown-toggle avatar-container"
+                href="#"
+                id="userDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                Profile
+                {% if user.avatar_url %}
+                <img
+                  src="{{ user.avatar_url.url }}?{{ user.date_joined|date:'U' }}"
+                  alt="Avatar"
+                  class="avatar"
+                />
+                {% else %}
+                <div
+                  class="avatar d-flex align-items-center justify-content-center bg-primary text-white"
+                >
+                  {{ user.username|make_list|first|upper }}
+                </div>
+                {% endif %}
+                <span class="avatar-text d-none d-md-block"
+                  >{{ user.username }}</span
+                >
               </a>
+              <ul
+                class="dropdown-menu dropdown-menu-end shadow"
+                aria-labelledby="userDropdown"
+              >
+                <li>
+                  <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                    <i class="fas fa-user-circle me-2"></i>Profile
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'learning_logs:goals' %}"
+                  >
+                    <i class="fas fa-flag me-2"></i>Learning Goals
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <form action="{% url 'accounts:logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i class="fas fa-sign-out-alt me-2"></i>Log out
+                    </button>
+                  </form>
+                </li>
+              </ul>
             </li>
-            <form
-              action="{% url 'accounts:logout' %}"
-              method="post"
-              class="d-inline"
-            >
-              {% csrf_token %}
-              <button name="submit" class="btn btn-outline-secondary btn-sm">
-                Log out
-              </button>
-            </form>
             {% else %}
             <li class="nav-item me-2">
               <a
-                class="nav-link btn btn-outline-success btn-sm"
-                href="{% url 'accounts:register' %}"
+                class="btn btn-outline-primary"
+                href="{% url 'accounts:login' %}"
               >
-                Register
+                <i class="fas fa-sign-in-alt me-1"></i>Log in
               </a>
             </li>
             <li class="nav-item">
-              <a
-                class="nav-link btn btn-outline-primary btn-sm"
-                href="{% url 'accounts:login' %}"
-              >
-                Log in
+              <a class="btn btn-primary" href="{% url 'accounts:register' %}">
+                <i class="fas fa-user-plus me-1"></i>Register
               </a>
             </li>
             {% endif %}
@@ -120,10 +334,18 @@
     </nav>
 
     <main class="container">
-      <div class="pb-2 mb-2 border-bottom">
+      <div class="page-header">
         {% block page_header %}{% endblock page_header %}
       </div>
       <div>{% block content %}{% endblock content %}</div>
     </main>
+
+    <footer class="text-center text-muted">
+      <div class="container">
+        <p class="mb-0">© {% now "Y" %} Learning Log. All rights reserved.</p>
+      </div>
+    </footer>
+
+    {% block extra_js %}{% endblock extra_js %}
   </body>
 </html>

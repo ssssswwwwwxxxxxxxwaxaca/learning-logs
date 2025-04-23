@@ -32,4 +32,11 @@ urlpatterns = [
 
     #删除topic
     path('delete_topic/<int:topic_id>/', views.delete_topic, name='delete_topic'),
+
+    # 新增URL
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('goals/', views.goals, name='goals'),
+    path('goals/<int:goal_id>/toggle/', views.toggle_goal, name='toggle_goal'),
+    path('topics/<int:topic_id>/start_session/', views.start_session, name='start_session'),
+    path('end_session/', views.end_session, name='end_session'),
 ]

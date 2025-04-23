@@ -1,6 +1,57 @@
 <!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\topic.html -->
 {% extends "learning_logs/base.html" %} {% block content %}
 <div class="container">
+  <!-- 在话题页面顶部添加学习会话控件 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ topic.text }}</h1>
+
+    <div>
+      {% if active_session %}
+      <div class="d-flex align-items-center">
+        <div class="me-3">
+          <span class="badge bg-success">Currently Studying</span>
+          <span id="timer" class="ms-2">00:00:00</span>
+        </div>
+        <form
+          action="{% url 'learning_logs:end_session' %}"
+          method="post"
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger">
+            End Session
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <a
+        href="{% url 'learning_logs:start_session' topic.id %}"
+        class="btn btn-success"
+      >
+        Start Study Session
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 添加进度条 -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between">
+      <h6>Progress</h6>
+      <span>{{ topic.completed_items }} / {{ topic.total_items }}</span>
+    </div>
+    <div class="progress">
+      <div
+        class="progress-bar"
+        role="progressbar"
+        style="width: {{ topic.progress_percentage }}%"
+        aria-valuenow="{{ topic.progress_percentage }}"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      ></div>
+    </div>
+  </div>
+
   <div class="text-center mb-4">
     <a
       href="{% url 'learning_logs:new_entry' topic.id %}"
@@ -56,3 +107,37 @@
   {% endfor %}
 </div>
 {% endblock content %}
+
+<!-- 在 topic.html 底部添加 -->
+{% block extra_js %} {% if active_session %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 获取会话开始时间
+    const startTime = new Date('{{ active_session.start_time|date:"c" }}');
+    const timerElement = document.getElementById("timer");
+
+    function updateTimer() {
+      const now = new Date();
+      const diff = now - startTime;
+
+      // 计算小时、分钟和秒
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+
+      // 格式化时间
+      const formattedHours = String(hours).padStart(2, "0");
+      const formattedMinutes = String(minutes).padStart(2, "0");
+      const formattedSeconds = String(seconds).padStart(2, "0");
+
+      timerElement.textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+    }
+
+    // 立即更新一次
+    updateTimer();
+
+    // 每秒更新一次
+    setInterval(updateTimer, 1000);
+  });
+</script>
+{% endif %} {% endblock %}
