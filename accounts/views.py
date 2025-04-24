@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, logout as auth_logout
+from django.contrib.auth import login, logout as auth_logout, authenticate
 from .models import CustomUser  # 导入自定义用户模型
 from .forms import CustomUserChangeForm, CustomUserCreationForm  # 合并导入
 from django.contrib.auth.forms import PasswordChangeForm
