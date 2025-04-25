@@ -34,7 +34,7 @@ A web application that allows users to log and track their learning journey on v
 This project includes AI assistance features powered by Ollama. To use these features:
 
 1. Install Ollama from [ollama.ai](https://ollama.ai)
-2. Pull the required model: `ollama pull llama3`
+2. Pull the required model: `ollama pull qwq:latest`
 3. Ensure Ollama is running before using AI features
 
 ## Screenshots

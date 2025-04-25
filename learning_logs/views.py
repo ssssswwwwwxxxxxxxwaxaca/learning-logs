@@ -12,7 +12,7 @@ from .utils.ollama_client import OllamaClient
 from .forms import AIQuestionForm, AIFeatureForm,AIQuestionForm
 import markdown
 from django.http import JsonResponse
-from learning_logs import models
+from django.db import models
 import json
 app_name = 'learning_logs'
 # Create your views here.
@@ -399,7 +399,7 @@ def step_detail(request, step_id):
     if request.method == 'POST':
         resource_form = StepResourceForm(request.POST)
         if resource_form.is_valid():
-            resource = resource_form.save(commit(False))
+            resource = resource_form.save(commit=False)
             resource.step = step
             resource.save()
             messages.success(request, f'资源 "{resource.title}" 添加成功！')
