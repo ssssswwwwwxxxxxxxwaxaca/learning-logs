@@ -182,7 +182,7 @@ class AIInteraction(models.Model):
         ('recommendation', 'Recommendation')
     ])
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    model_used=models.CharField(max_length=50,default='llama3')
     class Meta:
         ordering = ['-created_at']
     
@@ -202,6 +202,7 @@ class AIInteraction(models.Model):
         ('quiz', 'Quiz'),
         ('recommendation', 'Recommendation')
     ])
+    model_used = models.CharField(max_length=50, default='llama3')
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

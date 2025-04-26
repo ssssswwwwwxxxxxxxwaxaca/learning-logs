@@ -124,7 +124,7 @@ def delete_entry(request, entry_id):
 
 def search(request):
     query = request.GET.get('q', '')  # 获取搜索关键词
-    topics = Topic.objects.filter(text__icontains(query))  # 搜索主题
+    topics = Topic.objects.filter(text__icontains=query)  # 搜索主题
     entries = Entry.objects.filter(text__icontains(query))  # 搜索条目
     context = {
         'query': query,
@@ -458,12 +458,23 @@ def ai_assistant(request, topic_id):
     question_form = AIQuestionForm()
     feature_form = AIFeatureForm()
     
+    # 使用settings中配置的可用模型
+    available_models = getattr(settings, 'OLLAMA_AVAILABLE_MODELS', [
+        {'id': 'llama3', 'name': 'Llama 3'},
+        {'id': 'qwq:latest', 'name': 'qwq:latest'},
+        {'id': 'deepseek-r1:14b', 'name': 'deepseek-r1:14b'},
+    ])
+    
+    selected_model = request.POST.get('model', request.session.get('model', 'llama3'))
+    
     context = {
         'topic': topic,
         'entries': entries,
         'interactions': interactions,
         'question_form': question_form,
         'feature_form': feature_form,
+        'available_models': available_models,
+        'selected_model': selected_model,
     }
     
     # 检查是否是AJAX请求
@@ -474,10 +485,13 @@ def ai_assistant(request, topic_id):
         question_form = AIQuestionForm(request.POST)
         if question_form.is_valid():
             question = question_form.cleaned_data['question']
+            #获取并保存用户选择的模型
+            selected_model = request.POST.get('model', 'llama3')
+            request.session['model'] = selected_model
             
             # 调用Ollama API获取回答
             try:
-                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'llama3'))
+                client = OllamaClient(model_name=selected_model)
                 answer = client.answer_question(question, entries_text)
                 
                 # 将markdown格式的回答转换为HTML
@@ -489,7 +503,8 @@ def ai_assistant(request, topic_id):
                     topic=topic,
                     question=question,
                     response=answer,
-                    interaction_type='question'
+                    interaction_type='question',
+                    model_used=selected_model  # 保存使用的模型
                 )
                 
                 if is_ajax:
@@ -546,10 +561,17 @@ def ai_assistant(request, topic_id):
         feature_form = AIFeatureForm(request.POST)
         if feature_form.is_valid():
             feature_type = feature_form.cleaned_data['feature_type']
+            #获取并保存用户选择的模型
+            selected_model = request.POST.get('model', 'llama3')
+            request.session['model'] = selected_model
+            
+            # 初始化结果变量
+            result = None  # 确保result在所有条件分支之前被定义
             
             try:
-                client = OllamaClient(model_name=getattr(settings, 'OLLAMA_DEFAULT_MODEL', 'llama3'))
+                client = OllamaClient(model_name=selected_model)
                 
+                # 确保所有条件分支中都会定义 result 变量
                 if feature_type == 'summary':
                     result = client.get_topic_summary(topic.text, entries_text)
                     interaction_type = 'summary'
@@ -570,6 +592,13 @@ def ai_assistant(request, topic_id):
                     question = f"为主题'{topic.text}'提供学习建议"
                     success_message = "学习建议生成成功!"
                     title = "学习建议"
+                else:
+                    # 处理未知的功能类型
+                    raise ValueError(f"未知的功能类型: {feature_type}")
+                
+                # 确保 result 已定义再继续
+                if result is None:
+                    raise ValueError("生成的结果为空")
                 
                 # 将markdown格式的结果转换为HTML
                 result_html = markdown.markdown(result)
@@ -580,7 +609,8 @@ def ai_assistant(request, topic_id):
                     topic=topic,
                     question=question,
                     response=result,
-                    interaction_type=interaction_type
+                    interaction_type=interaction_type,
+                    model_used=selected_model  # 保存使用的模型
                 )
                 
                 if is_ajax:
@@ -632,17 +662,27 @@ def ai_assistant(request, topic_id):
             else:
                 messages.error(request, error_msg)
     
-    # 添加诊断功能
-    if 'check_ollama' in request.GET:
-        try:
-            import requests
-            response = requests.get(getattr(settings, 'OLLAMA_API_URL', 'http://localhost:11434'))
-            if response.status_code == 200:
-                messages.success(request, f"Ollama服务正常运行! 状态: {response.status_code}")
-            else:
-                messages.error(request, f"Ollama服务返回错误代码: {response.status_code}")
-        except Exception as e:
-            messages.error(request, f"无法连接到Ollama服务: {str(e)}")
-        return redirect('learning_logs:ai_assistant', topic_id=topic_id)
-    
+    # 如果不是POST请求或者没有提交任何表单，显示页面
     return render(request, 'learning_logs/ai_assistant.html', context)
+
+import markdown
+
+@login_required
+def interaction_detail(request, interaction_id):
+    """获取交互详情的API"""
+    interaction = get_object_or_404(AIInteraction, id=interaction_id, user=request.user)
+    
+    # 转换 Markdown 为 HTML
+    response_html = markdown.markdown(interaction.response)
+    
+    data = {
+        'id': interaction.id,
+        'question': interaction.question,
+        'response': interaction.response,
+        'response_html': response_html,
+        'interaction_type': interaction.interaction_type,
+        'model_used': interaction.model_used,
+        'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    return JsonResponse(data)

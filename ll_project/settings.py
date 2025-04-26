@@ -164,3 +164,12 @@ urlpatterns = [
 
 OLLAMA_API_URL = 'http://localhost:11434'
 OLLAMA_MODEL = 'qwq:latest'
+
+# Ollama 设置
+OLLAMA_API_URL = 'http://localhost:11434'
+OLLAMA_DEFAULT_MODEL = 'llama3'
+OLLAMA_AVAILABLE_MODELS = [
+    {'id': 'llama3', 'name': 'Llama 3'},
+    {'id': 'qwq:latest', 'name': 'qwq:latest'},
+    {'id': 'deepseek-r1:14b', 'name': 'deepseek-r1:14b'},
+]
