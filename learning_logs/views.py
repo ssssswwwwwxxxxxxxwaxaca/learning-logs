@@ -530,7 +530,8 @@ def ai_assistant(request, topic_id):
                             'response': interaction.response,
                             'interaction_type': interaction.interaction_type,
                             'interaction_type_display': interaction.get_interaction_type_display(),
-                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                            'model_used': interaction.model_used
                         }
                     })
                 else:
@@ -636,7 +637,8 @@ def ai_assistant(request, topic_id):
                             'response': interaction.response,
                             'interaction_type': interaction.interaction_type,
                             'interaction_type_display': interaction.get_interaction_type_display(),
-                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                            'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                            'model_used': selected_model
                         }
                     })
                 else:
