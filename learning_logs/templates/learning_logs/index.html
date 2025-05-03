@@ -1,19 +1,458 @@
 <!-- filepath: f:\web_python\ll_project\learning_logs\templates\learning_logs\index.html -->
-{% extends "learning_logs/base.html" %} {% block page_header %}
-<div class="p-5 mb-4 bg-light border rounded-3 shadow-sm">
-  <div class="container-fluid py-5 text-center">
-    <h1 class="display-3 fw-bold text-primary">Trace Your Learning</h1>
-    <p class="lead mt-3 text-secondary">
-      Create your own learning log and keep track of the topics you are learning
-      about. Whenever you learn something new, make an entry summarizing what
-      you have learned.
-    </p>
-    <a
-      class="btn btn-primary btn-lg mt-4 px-5 py-2 shadow"
-      href="{% url 'accounts:register' %}"
-    >
-      Register Now &raquo;
-    </a>
+{% extends "learning_logs/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  .hero-section {
+    background: linear-gradient(135deg, #0062E6 0%, #33AEFF 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+    padding: 100px 0;
+  }
+  
+  .hero-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-image: url('{% static "img/pattern.svg" %}');
+    opacity: 0.1;
+    z-index: 1;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .display-1 {
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+  
+  .hero-subheading {
+    font-size: 1.3rem;
+    font-weight: 300;
+    opacity: 0.9;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .btn-hero {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    background: white;
+    color: #0062E6;
+    border: none;
+  }
+  
+  .btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    background: white;
+    color: #0050b3;
+  }
+  
+  .feature-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feature-icon {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 25px;
+  }
+  
+  .testimonial-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .testimonial-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+  }
+  
+  .cta-section {
+    background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+    border-radius: 16px;
+  }
+  
+  .stats-item {
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+  }
+  
+  .stats-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 10px;
+  }
+  
+  .stats-label {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .section-title {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 60px;
+  }
+  
+  .section-title:after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 4px;
+    background: #0062E6;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+  
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 60px 0;
+    }
+    .display-1 {
+      font-size: 2.8rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-pattern"></div>
+  <div class="container hero-content text-center">
+    <h1 class="display-1 mb-4">Transform Your Learning Journey</h1>
+    <p class="hero-subheading mb-5">Track your progress, organize your knowledge, and accelerate your learning with our AI-powered learning companion.</p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'accounts:register' %}" class="btn btn-hero shadow-lg">
+        Get Started Free
+      </a>
+      <a href="#features" class="btn btn-outline-light px-4">
+        Explore Features
+      </a>
+    </div>
   </div>
-</div>
-{% endblock page_header %}
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+  <div class="container py-5">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="stats-item shadow-sm">
+          <div class="stats-number text-primary">10K+</div>
+          <div class="stats-label">Active Learners</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stats-item shadow-sm">
+          <div class="stats-number text-primary">250K+</div>
+          <div class="stats-label">Learning Notes</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stats-item shadow-sm">
+          <div class="stats-number text-primary">95%</div>
+          <div class="stats-label">Success Rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+  <div class="container py-5">
+    <h2 class="section-title text-center fs-1 fw-bold">Powerful Features</h2>
+    
+    <div class="row g-4 mt-3">
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-primary-subtle mx-auto">
+              <i class="fas fa-brain fa-2x text-primary"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">AI Learning Assistant</h3>
+            <p class="text-muted">Get personalized summaries, quizzes, and learning recommendations powered by advanced AI.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-success-subtle mx-auto">
+              <i class="fas fa-route fa-2x text-success"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">Learning Paths</h3>
+            <p class="text-muted">Create structured learning journeys with clear milestones and progress tracking.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-warning-subtle mx-auto">
+              <i class="fas fa-chart-line fa-2x text-warning"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">Progress Analytics</h3>
+            <p class="text-muted">Visualize your learning progress and identify areas for improvement.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-info-subtle mx-auto">
+              <i class="fas fa-users fa-2x text-info"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">Community Learning</h3>
+            <p class="text-muted">Connect with other learners, share insights, and collaborate on topics.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-danger-subtle mx-auto">
+              <i class="fas fa-bullseye fa-2x text-danger"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">Learning Goals</h3>
+            <p class="text-muted">Set and track personal learning goals with deadline management.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card feature-card shadow-sm h-100">
+          <div class="card-body text-center p-5">
+            <div class="feature-icon bg-secondary-subtle mx-auto">
+              <i class="fas fa-clock fa-2x text-secondary"></i>
+            </div>
+            <h3 class="fs-4 fw-bold">Study Time Tracking</h3>
+            <p class="text-muted">Log and analyze your study sessions to optimize learning efficiency.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5">
+  <div class="container py-5">
+    <h2 class="section-title text-center fs-1 fw-bold">What Our Users Say</h2>
+    
+    <div class="row g-4 mt-3">
+      <div class="col-md-4">
+        <div class="card testimonial-card shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column align-items-center mb-3">
+              <img src="{% static 'img/testimonial-1.jpg' %}" alt="User" class="testimonial-avatar mb-3">
+              <h5 class="mb-0">Sarah J.</h5>
+              <p class="text-muted">Data Science Student</p>
+            </div>
+            <p class="text-center">"The AI learning assistant has completely transformed how I study. The personalized quizzes help me identify my weak areas quickly."</p>
+            <div class="text-warning text-center">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card testimonial-card shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column align-items-center mb-3">
+              <img src="{% static 'img/testimonial-2.jpg' %}" alt="User" class="testimonial-avatar mb-3">
+              <h5 class="mb-0">Michael T.</h5>
+              <p class="text-muted">Software Developer</p>
+            </div>
+            <p class="text-center">"I use Learning Log to track my progress with new programming languages. The structured approach has improved my retention significantly."</p>
+            <div class="text-warning text-center">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card testimonial-card shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column align-items-center mb-3">
+              <img src="{% static 'img/testimonial-3.jpg' %}" alt="User" class="testimonial-avatar mb-3">
+              <h5 class="mb-0">Emma R.</h5>
+              <p class="text-muted">Digital Marketing Manager</p>
+            </div>
+            <p class="text-center">"Learning paths feature helped me organize my professional development. I can finally track my progress across multiple marketing disciplines."</p>
+            <div class="text-warning text-center">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 bg-light">
+  <div class="container py-5">
+    <h2 class="section-title text-center fs-1 fw-bold">How It Works</h2>
+    
+    <div class="row align-items-center g-5 mt-3">
+      <div class="col-lg-6">
+        <img src="{% static 'img/dashboard-preview.jpg' %}" alt="Dashboard Preview" class="img-fluid rounded-4 shadow">
+      </div>
+      <div class="col-lg-6">
+        <div class="ps-lg-5">
+          <div class="d-flex mb-4">
+            <div class="me-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">1</div>
+            </div>
+            <div>
+              <h3 class="fs-4 fw-bold">Create Your Topics</h3>
+              <p class="text-muted">Set up topics for subjects you're learning about, from programming to art history.</p>
+            </div>
+          </div>
+          
+          <div class="d-flex mb-4">
+            <div class="me-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">2</div>
+            </div>
+            <div>
+              <h3 class="fs-4 fw-bold">Add Learning Entries</h3>
+              <p class="text-muted">Document what you learn with notes, code snippets, images, and links.</p>
+            </div>
+          </div>
+          
+          <div class="d-flex mb-4">
+            <div class="me-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">3</div>
+            </div>
+            <div>
+              <h3 class="fs-4 fw-bold">Use AI Assistant</h3>
+              <p class="text-muted">Generate summaries, quizzes, and get personalized recommendations to enhance learning.</p>
+            </div>
+          </div>
+          
+          <div class="d-flex">
+            <div class="me-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">4</div>
+            </div>
+            <div>
+              <h3 class="fs-4 fw-bold">Track Your Progress</h3>
+              <p class="text-muted">Visualize your learning journey and celebrate your achievements.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+  <div class="container py-5">
+    <div class="cta-section p-5 text-center text-white">
+      <h2 class="fs-1 fw-bold mb-4">Ready to Transform Your Learning?</h2>
+      <p class="lead mb-4">Join thousands of learners who have already improved their learning efficiency.</p>
+      <a href="{% url 'accounts:register' %}" class="btn btn-hero shadow-lg">
+        Sign Up Now
+      </a>
+      <p class="mt-3 small">No credit card required. Free plan available.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelector(this.getAttribute('href')).scrollIntoView({
+        behavior: 'smooth'
+      });
+    });
+  });
+  
+  // Animation on scroll (can be enhanced with libraries like AOS)
+  const animateOnScroll = () => {
+    const elements = document.querySelectorAll('.feature-card, .testimonial-card, .stats-item');
+    elements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const isVisible = rect.top < window.innerHeight - 100;
+      if (isVisible) {
+        el.style.opacity = 1;
+      }
+    });
+  };
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set initial opacity for animated elements
+    document.querySelectorAll('.feature-card, .testimonial-card, .stats-item').forEach(el => {
+      el.style.opacity = 0;
+      el.style.transition = 'opacity 0.6s ease-in-out, transform 0.6s ease-in-out';
+    });
+    
+    // Trigger animation
+    animateOnScroll();
+    
+    // Listen for scroll events
+    window.addEventListener('scroll', animateOnScroll);
+  });
+</script>
+{% endblock %}
