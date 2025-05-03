@@ -683,6 +683,7 @@ def interaction_detail(request, interaction_id):
         'response': interaction.response,
         'response_html': response_html,
         'interaction_type': interaction.interaction_type,
+        'topic':interaction.topic.text,
         'model_used': interaction.model_used,
         'created_at': interaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
     }

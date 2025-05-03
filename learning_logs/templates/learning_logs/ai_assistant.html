@@ -212,6 +212,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+
+      <!-- 添加主题信息 -->
+        <div class="mb-3">
+          <h6>Topic:</h6>
+          <p id="modal-topic" class="mb-2">Topic Name</p>
+        </div>
+        
         <div class="mb-3">
           <h6>Model:</h6>
           <p id="modal-model" class="mb-2">
@@ -435,18 +442,32 @@
       document.querySelectorAll('.view-interaction').forEach(button => {
         button.addEventListener('click', function() {
           const interactionId = this.getAttribute('data-id');
-          fetch(`/learning_logs/interaction/${interactionId}/`)
-            .then(response => response.json())
+          fetch(`/interaction/${interactionId}/`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
             .then(data => {
-              document.getElementById('modal-question').textContent = data.question;
-              document.getElementById('modal-response').innerHTML = data.response_html;
+              document.getElementById('modal-question').textContent = data.question || "问题未提供";
+              document.getElementById('modal-response').innerHTML = data.response_html || data.response || "无回答内容";
               document.getElementById('modal-model').innerHTML = 
-                `<span class="badge bg-secondary">${data.model_used || 'Default Model'}</span>`;
+                `<span class="badge bg-secondary">${data.model_used || '默认模型'}</span>`;
+              // 如果有主题信息，则显示
+              if (data.topic) {
+                document.getElementById('modal-topic').textContent = data.topic;
+              } else {
+                document.getElementById('modal-topic').parentElement.style.display = 'none';
+              }
             })
             .catch(error => {
               console.error("Error fetching interaction details:", error);
               document.getElementById('modal-response').innerHTML = 
-                `<div class="alert alert-danger">Error loading interaction details</div>`;
+                `<div class="alert alert-danger">
+                  <i class="fas fa-exclamation-circle me-2"></i>
+                  加载交互详情失败: ${error.message}
+                </div>`;
             });
         });
       });
