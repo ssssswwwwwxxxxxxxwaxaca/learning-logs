@@ -26,6 +26,7 @@ urlpatterns = [
     path('', include('learning_logs.urls', namespace='learning_logs')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.png')),
+    path('analytics/', include('analytics.urls')),
 ]
 
 # 确保这行代码在 DEBUG = True 时有效

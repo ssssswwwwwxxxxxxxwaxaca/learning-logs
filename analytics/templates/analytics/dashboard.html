@@ -1,0 +1,336 @@
+{% extends 'learning_logs/base.html' %}
+{% load static %}
+{% load analytics_extras %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h2 mb-0">学习数据分析</h1>
+    <p class="text-muted">可视化您的学习进度和习惯</p>
+  </div>
+  <div>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" id="analyticsMenu" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-chart-bar me-2"></i>分析页面
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="analyticsMenu">
+        <li><a class="dropdown-item" href="{% url 'analytics:statistics' %}">学习时间统计</a></li>
+        <li><a class="dropdown-item" href="{% url 'analytics:progress' %}">学习进度报告</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#preferencesModal">分析偏好设置</button></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 数据卡片 -->
+<div class="row g-4 mb-4">
+  <!-- 总学习时间 -->
+  <div class="col-md-3">
+    <div class="card border-left-primary shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">总学习时间</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {{ total_study_time.total_seconds|floatformat:0|divided_by:3600|default:"0" }} 小时
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-clock fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主题数量 -->
+  <div class="col-md-3">
+    <div class="card border-left-success shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">主题数量</div>
+            <div class="h5 mb-0 font-weight-bold">{{ topic_count }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-book fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 本周学习时间 -->
+  <div class="col-md-3">
+    <div class="card border-left-info shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">本周学习时间</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {{ weekly_study_time.total_seconds|floatformat:0|divided_by:3600|default:"0" }} 小时
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 学习连续天数 -->
+  <div class="col-md-3">
+    <div class="card border-left-warning shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">连续学习</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {% for streak in request.user.learning_streaks.all %}
+              {{ streak.current_streak }} 天
+              {% empty %}
+              0 天
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-fire fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图表区域 -->
+<div class="row g-4">
+  {% if preferences.show_study_time %}
+  <div class="col-lg-8">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">学习时间趋势 (过去30天)</h6>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'analytics:statistics' %}">查看详细统计</a></li>
+            <li><a class="dropdown-item" href="#">导出数据</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="position: relative; height:300px;">
+          <canvas id="studyTimeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if preferences.show_topic_progress %}
+  <div class="col-lg-4">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">主题学习分布</h6>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="position: relative; height:300px;">
+          <canvas id="topicDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 学习洞察区域 -->
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">学习洞察</h6>
+      </div>
+      <div class="card-body">
+        {% for insight in insights %}
+        <div class="d-flex mb-3 pb-2 border-bottom">
+          <div class="flex-shrink-0">
+            {% if insight.insight_type == 'productivity' %}
+            <i class="fas fa-tachometer-alt text-primary fa-2x me-3"></i>
+            {% elif insight.insight_type == 'pattern' %}
+            <i class="fas fa-chart-line text-success fa-2x me-3"></i>
+            {% elif insight.insight_type == 'recommendation' %}
+            <i class="fas fa-lightbulb text-warning fa-2x me-3"></i>
+            {% elif insight.insight_type == 'achievement' %}
+            <i class="fas fa-trophy text-danger fa-2x me-3"></i>
+            {% elif insight.insight_type == 'streak' %}
+            <i class="fas fa-fire text-info fa-2x me-3"></i>
+            {% else %}
+            <i class="fas fa-info-circle text-secondary fa-2x me-3"></i>
+            {% endif %}
+          </div>
+          <div>
+            <h6 class="mb-1">{{ insight.title }}</h6>
+            <p class="mb-0 text-muted">{{ insight.message }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4">
+          <p class="text-muted mb-0">没有可用的学习洞察</p>
+          <small>继续学习以获取更多见解!</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">主要学习主题</h6>
+      </div>
+      <div class="card-body">
+        {% for analytics in topic_analytics %}
+        <h4 class="small font-weight-bold">
+          {{ analytics.topic.text }}
+          <span class="float-end">{{ analytics.total_study_time.total_seconds|floatformat:0|divided_by:60|default:"0" }} 分钟</span>
+        </h4>
+        <div class="progress mb-4">
+          <div class="progress-bar" role="progressbar" style="width: {{ analytics.total_study_time.total_seconds|percentage_of_max:topic_analytics }}%"></div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4">
+          <p class="text-muted mb-0">没有主题学习数据</p>
+          <small>开始学习来追踪您的进度!</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 分析偏好设置模态框 -->
+<div class="modal fade" id="preferencesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">分析偏好设置</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'analytics:update_preferences' %}" method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="show_study_time" name="show_study_time"
+                {% if preferences.show_study_time %}checked{% endif %}>
+              <label class="form-check-label" for="show_study_time">显示学习时间图表</label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="show_topic_progress" name="show_topic_progress"
+                {% if preferences.show_topic_progress %}checked{% endif %}>
+              <label class="form-check-label" for="show_topic_progress">显示主题进度</label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="show_goal_progress" name="show_goal_progress"
+                {% if preferences.show_goal_progress %}checked{% endif %}>
+              <label class="form-check-label" for="show_goal_progress">显示目标进度</label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="chart_color_theme" class="form-label">图表配色主题</label>
+            <select class="form-select" id="chart_color_theme" name="chart_color_theme">
+              <option value="default" {% if preferences.chart_color_theme == 'default' %}selected{% endif %}>默认</option>
+              <option value="dark" {% if preferences.chart_color_theme == 'dark' %}selected{% endif %}>暗色</option>
+              <option value="pastel" {% if preferences.chart_color_theme == 'pastel' %}selected{% endif %}>柔和色</option>
+              <option value="bright" {% if preferences.chart_color_theme == 'bright' %}selected{% endif %}>明亮色</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="dashboard_layout" class="form-label">仪表板布局</label>
+            <select class="form-select" id="dashboard_layout" name="dashboard_layout">
+              <option value="grid" {% if preferences.dashboard_layout == 'grid' %}selected{% endif %}>网格</option>
+              <option value="vertical" {% if preferences.dashboard_layout == 'vertical' %}selected{% endif %}>垂直</option>
+              <option value="compact" {% if preferences.dashboard_layout == 'compact' %}selected{% endif %}>紧凑</option>
+            </select>
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">保存设置</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 学习时间图表
+    fetch("{% url 'analytics:chart_data' %}?type=daily")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('studyTimeChart');
+        if(ctx) {
+          new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: '小时'
+                  }
+                }
+              }
+            }
+          });
+        }
+      });
+    
+    // 主题分布图
+    fetch("{% url 'analytics:chart_data' %}?type=topics")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('topicDistributionChart');
+        if(ctx) {
+          new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    boxWidth: 15
+                  }
+                }
+              }
+            }
+          });
+        }
+      });
+  });
+</script>
+{% endblock %}

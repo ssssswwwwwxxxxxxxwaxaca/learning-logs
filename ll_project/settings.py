@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     #my apps in front of others  so that can cover everything
     'learning_logs',
     'accounts',
+    'analytics',
     #第三方应用程序
     'django_bootstrap5',
     "widget_tweaks",

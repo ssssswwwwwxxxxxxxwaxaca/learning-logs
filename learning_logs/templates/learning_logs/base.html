@@ -251,6 +251,11 @@
                 <i class="fas fa-route me-1"></i>Learning Paths
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link {% if 'analytics' in request.path %}active{% endif %}" href="{% url 'analytics:dashboard' %}">
+                <i class="fas fa-chart-bar me-2"></i>Analytics
+              </a>
+            </li>
           </ul>
 
           <!-- 搜索表单 -->

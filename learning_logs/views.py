@@ -125,7 +125,7 @@ def delete_entry(request, entry_id):
 def search(request):
     query = request.GET.get('q', '')  # 获取搜索关键词
     topics = Topic.objects.filter(text__icontains=query)  # 搜索主题
-    entries = Entry.objects.filter(text__icontains(query))  # 搜索条目
+    entries = Entry.objects.filter(text__icontains=query)  # 搜索条目
     context = {
         'query': query,
         'topics': topics,

@@ -1,0 +1,757 @@
+{% extends 'learning_logs/base.html' %}
+{% load static %}
+{% load analytics_extras %}
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h2 mb-0">学习时间统计</h1>
+    <p class="text-muted">分析您的学习时间分布和习惯</p>
+  </div>
+  <div>
+    <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i>返回仪表板
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 时间统计卡片 -->
+<div class="row g-4 mb-4">
+  <!-- 本周学习时间 -->
+  <div class="col-md-3">
+    <div class="card border-left-primary shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">本周学习时间</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {{ weekly_study_time.total_seconds|floatformat:0|divided_by:3600|default:"0" }} 小时
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 本月学习时间 -->
+  <div class="col-md-3">
+    <div class="card border-left-success shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">本月学习时间</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {{ monthly_study_time.total_seconds|floatformat:0|divided_by:3600|default:"0" }} 小时
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 学习连续天数 -->
+  <div class="col-md-3">
+    <div class="card border-left-info shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">当前学习连续天数</div>
+            <div class="h5 mb-0 font-weight-bold">{{ streak.current_streak }} 天</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-fire fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 最长连续天数 -->
+  <div class="col-md-3">
+    <div class="card border-left-warning shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">最长学习连续天数</div>
+            <div class="h5 mb-0 font-weight-bold">{{ streak.longest_streak }} 天</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图表和分析区域 -->
+<div class="row g-4">
+  <!-- 每月学习时间趋势图 -->
+  <div class="col-lg-8">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">每月学习时间趋势</h6>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" id="switchToWeekly">切换到每周视图</a></li>
+            <li><a class="dropdown-item" href="#" id="switchToMonthly">切换到每月视图</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">导出数据</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="position: relative; height:300px;">
+          <canvas id="monthlyStudyTimeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一天中的学习时间分布 -->
+  <div class="col-lg-4">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">一天中的学习时间分布</h6>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="position: relative; height:300px;">
+          <canvas id="dailyDistributionChart"></canvas>
+        </div>
+        <div class="mt-3">
+          <h6 class="mb-2">最佳学习时段</h6>
+          <p class="mb-0">
+            根据您的数据，您在 
+            <span class="badge bg-success">
+              {% if best_hour %}
+                {{ best_hour }}:00 - {{ best_hour|add:"1" }}:00
+              {% else %}
+                暂无数据
+              {% endif %}
+            </span> 
+            效率最高
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 学习会话表格和学习日历 -->
+<div class="row g-4">
+  <!-- 最近学习会话 -->
+  <div class="col-lg-7">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">最近学习会话</h6>
+        <div>
+          <a href="{% url 'learning_logs:topics' %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i> 开始新会话
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>主题</th>
+                <th>开始时间</th>
+                <th>时长</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in recent_sessions %}
+              <tr>
+                <td>{{ session.start_time|date:"Y-m-d" }}</td>
+                <td>
+                  <a href="{% url 'learning_logs:topic' session.topic.id %}">
+                    {{ session.topic.text }}
+                  </a>
+                </td>
+                <td>{{ session.start_time|date:"H:i" }}</td>
+                <td>{{ session.duration.total_seconds|floatformat:0|divided_by:60|default:"0" }} 分钟</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-4">
+                  <p class="text-muted mb-0">暂无学习会话记录</p>
+                  <small>开始学习以记录您的进度!</small>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if recent_sessions %}
+        <div class="text-center mt-3">
+          <a href="#" class="btn btn-sm btn-outline-primary">查看全部会话</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 学习日历 -->
+  <div class="col-lg-5">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">学习日历</h6>
+      </div>
+      <div class="card-body">
+        <div id="studyCalendar" class="study-calendar mb-3"></div>
+        <div class="d-flex align-items-center justify-content-center">
+          <span class="me-2">学习强度: </span>
+          <div class="d-flex">
+            <div class="calendar-intensity-box intensity-none me-1"></div>
+            <div class="calendar-intensity-box intensity-low me-1"></div>
+            <div class="calendar-intensity-box intensity-medium me-1"></div>
+            <div class="calendar-intensity-box intensity-high me-1"></div>
+            <div class="calendar-intensity-box intensity-very-high"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 学习习惯和主题分布 -->
+<div class="row g-4">
+  <!-- 学习习惯分析 -->
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">学习习惯分析</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-4">
+          <h6 class="mb-2">平均每次学习时长</h6>
+          <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ avg_session_percentage|default:'0' }}%"
+              aria-valuenow="{{ avg_session_duration|default:'0' }}" aria-valuemin="0" aria-valuemax="120">
+              {{ avg_session_duration|floatformat:0|default:'0' }} 分钟
+            </div>
+          </div>
+          <small class="text-muted">理想学习时长为 45-60 分钟</small>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="mb-2">每周学习天数</h6>
+          <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ weekly_days_percentage|default:'0' }}%"
+              aria-valuenow="{{ weekly_study_days|default:'0' }}" aria-valuemin="0" aria-valuemax="7">
+              {{ weekly_study_days|floatformat:1|default:'0' }} 天/周
+            </div>
+          </div>
+          <small class="text-muted">理想学习频率为 5-7 天/周</small>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="mb-2">学习间隔规律性</h6>
+          <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ regularity_score_percentage|default:'0' }}%"
+              aria-valuenow="{{ regularity_score|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
+              {{ regularity_score|floatformat:0|default:'0' }}%
+            </div>
+          </div>
+          <small class="text-muted">规律的学习间隔有助于提高学习效果</small>
+        </div>
+        
+        <div class="habits-summary mt-4">
+          <h6>习惯建议</h6>
+          <ul class="ps-3">
+            {% if habit_suggestions %}
+              {% for suggestion in habit_suggestions %}
+                <li>{{ suggestion }}</li>
+              {% endfor %}
+            {% else %}
+              <li>尝试在固定的时间段学习，培养规律的学习习惯</li>
+              <li>每次学习尽量保持45-60分钟，效率最高</li>
+              <li>避免marathon学习（长时间不间断学习），适当休息更有效</li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主题学习分布 -->
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">主题学习时间分布</h6>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" id="sortByTime">按时间排序</a></li>
+            <li><a class="dropdown-item" href="#" id="sortByName">按名称排序</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="position: relative; height:300px;">
+          <canvas id="topicDistributionChart"></canvas>
+        </div>
+        {% if topic_distribution %}
+        <div class="mt-3">
+          <h6 class="mb-2">关注分布</h6>
+          <p class="mb-0">
+            您在 <span class="badge bg-primary">{{ most_studied_topic }}</span> 主题上花费了最多时间
+            {% if balanced_distribution %}
+              <span class="badge bg-success">均衡</span>
+            {% else %}
+              <span class="badge bg-warning">不均衡</span>
+            {% endif %}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 获取每月学习时间数据
+    fetch("{% url 'analytics:api_monthly_stats' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('monthlyStudyTimeChart');
+        if(ctx) {
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: '学习时间 (小时)',
+                data: data.values,
+                backgroundColor: 'rgba(78, 115, 223, 0.5)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: '小时'
+                  }
+                }
+              }
+            }
+          });
+        }
+      })
+      .catch(error => console.error('Error loading monthly stats:', error));
+    
+    // 获取每日分布数据
+    fetch("{% url 'analytics:api_hourly_stats' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('dailyDistributionChart');
+        if(ctx) {
+          new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: '学习时间 (分钟)',
+                data: data.values,
+                fill: true,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                r: {
+                  angleLines: {
+                    display: true
+                  },
+                  suggestedMin: 0
+                }
+              }
+            }
+          });
+        }
+      })
+      .catch(error => console.error('Error loading hourly stats:', error));
+    
+    // 获取主题分布数据
+    fetch("{% url 'analytics:api_topic_stats' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('topicDistributionChart');
+        if(ctx) {
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                data: data.values,
+                backgroundColor: [
+                  'rgba(255, 99, 132, 0.5)',
+                  'rgba(54, 162, 235, 0.5)',
+                  'rgba(255, 206, 86, 0.5)',
+                  'rgba(75, 192, 192, 0.5)',
+                  'rgba(153, 102, 255, 0.5)',
+                  'rgba(255, 159, 64, 0.5)'
+                ],
+                borderColor: [
+                  'rgba(255, 99, 132, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }
+          });
+        }
+      })
+      .catch(error => console.error('Error loading topic stats:', error));
+    
+    // 初始化学习日历
+    renderStudyCalendar();
+    
+    // 切换图表视图事件
+    document.getElementById('switchToWeekly').addEventListener('click', function(e) {
+      e.preventDefault();
+      fetch("{% url 'analytics:api_weekly_stats' %}")
+        .then(response => response.json())
+        .then(data => {
+          // 更新图表数据
+          const chart = Chart.getChart('monthlyStudyTimeChart');
+          chart.data.labels = data.labels;
+          chart.data.datasets[0].data = data.values;
+          chart.data.datasets[0].label = '每周学习时间 (小时)';
+          chart.update();
+        });
+    });
+    
+    document.getElementById('switchToMonthly').addEventListener('click', function(e) {
+      e.preventDefault();
+      fetch("{% url 'analytics:api_monthly_stats' %}")
+        .then(response => response.json())
+        .then(data => {
+          // 更新图表数据
+          const chart = Chart.getChart('monthlyStudyTimeChart');
+          chart.data.labels = data.labels;
+          chart.data.datasets[0].data = data.values;
+          chart.data.datasets[0].label = '每月学习时间 (小时)';
+          chart.update();
+        });
+    });
+    
+    // 排序主题分布
+    document.getElementById('sortByTime').addEventListener('click', function(e) {
+      e.preventDefault();
+      fetch("{% url 'analytics:api_topic_stats' %}?sort=time")
+        .then(response => response.json())
+        .then(data => {
+          // 更新图表数据
+          const chart = Chart.getChart('topicDistributionChart');
+          chart.data.labels = data.labels;
+          chart.data.datasets[0].data = data.values;
+          chart.update();
+        });
+    });
+    
+    document.getElementById('sortByName').addEventListener('click', function(e) {
+      e.preventDefault();
+      fetch("{% url 'analytics:api_topic_stats' %}?sort=name")
+        .then(response => response.json())
+        .then(data => {
+          // 更新图表数据
+          const chart = Chart.getChart('topicDistributionChart');
+          chart.data.labels = data.labels;
+          chart.data.datasets[0].data = data.values;
+          chart.update();
+        });
+    });
+  });
+  
+  function renderStudyCalendar() {
+    // 这里可以使用完整的日历库如FullCalendar
+    // 为简化起见，我们使用简单的方式渲染最近30天的学习情况
+    fetch("{% url 'analytics:api_calendar_data' %}")
+      .then(response => response.json())
+      .then(data => {
+        const calendarContainer = document.getElementById('studyCalendar');
+        if (!calendarContainer) return;
+        
+        // 清空容器
+        calendarContainer.innerHTML = '';
+        
+        // 创建月份标题
+        const monthTitle = document.createElement('div');
+        monthTitle.className = 'calendar-month-title';
+        monthTitle.textContent = moment().format('YYYY年MM月');
+        calendarContainer.appendChild(monthTitle);
+        
+        // 创建星期栏
+        const weekRow = document.createElement('div');
+        weekRow.className = 'calendar-week-row';
+        ['周日', '周一', '周二', '周三', '周四', '周五', '周六'].forEach(day => {
+          const dayCell = document.createElement('div');
+          dayCell.className = 'calendar-day-header';
+          dayCell.textContent = day;
+          weekRow.appendChild(dayCell);
+        });
+        calendarContainer.appendChild(weekRow);
+        
+        // 获取当月第一天是星期几
+        const firstDay = moment().startOf('month').day();
+        
+        // 获取当月天数
+        const daysInMonth = moment().daysInMonth();
+        
+        // 创建日历格子
+        let dayCounter = 1;
+        for (let weekRow = 0; weekRow < 6; weekRow++) {
+          // 如果已经显示完所有天数，退出循环
+          if (dayCounter > daysInMonth) break;
+          
+          const row = document.createElement('div');
+          row.className = 'calendar-week-row';
+          
+          for (let dayCol = 0; dayCol < 7; dayCol++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day-cell';
+            
+            // 第一行特殊处理，前面几天可能是空的
+            if (weekRow === 0 && dayCol < firstDay) {
+              dayCell.className += ' empty';
+            } 
+            // 如果超出天数，也是空的
+            else if (dayCounter > daysInMonth) {
+              dayCell.className += ' empty';
+            }
+            // 正常显示日期
+            else {
+              dayCell.textContent = dayCounter;
+              
+              // 获取该天的学习记录
+              const dateStr = moment().format(`YYYY-MM-${dayCounter.toString().padStart(2, '0')}`);
+              const dayData = data.find(d => d.date === dateStr);
+              
+              if (dayData) {
+                // 根据学习时间设置不同的颜色深度
+                const hours = dayData.study_time_hours;
+                let intensityClass = '';
+                if (hours === 0) intensityClass = 'intensity-none';
+                else if (hours < 1) intensityClass = 'intensity-low';
+                else if (hours < 2) intensityClass = 'intensity-medium';
+                else if (hours < 4) intensityClass = 'intensity-high';
+                else intensityClass = 'intensity-very-high';
+                
+                dayCell.className += ` ${intensityClass}`;
+                dayCell.setAttribute('title', `${hours} 小时的学习`);
+                
+                // 添加数据提示
+                const tooltip = document.createElement('span');
+                tooltip.className = 'day-tooltip';
+                tooltip.textContent = `${hours}h`;
+                dayCell.appendChild(tooltip);
+              } else {
+                dayCell.className += ' intensity-none';
+              }
+              
+              // 今天特殊标记
+              if (dayCounter === moment().date()) {
+                dayCell.className += ' today';
+              }
+              
+              dayCounter++;
+            }
+            
+            row.appendChild(dayCell);
+          }
+          
+          calendarContainer.appendChild(row);
+        }
+      })
+      .catch(error => {
+        console.error('Error loading calendar data:', error);
+        document.getElementById('studyCalendar').innerHTML = 
+          '<div class="alert alert-danger">无法加载日历数据</div>';
+      });
+  }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .border-left-primary {
+    border-left: 4px solid #4e73df !important;
+  }
+  
+  .border-left-success {
+    border-left: 4px solid #1cc88a !important;
+  }
+  
+  .border-left-info {
+    border-left: 4px solid #36b9cc !important;
+  }
+  
+  .border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+  }
+  
+  .text-xs {
+    font-size: .7rem;
+  }
+  
+  /* 学习日历样式 */
+  .study-calendar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .calendar-month-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  
+  .calendar-week-row {
+    display: flex;
+    gap: 2px;
+  }
+  
+  .calendar-day-header {
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 4px;
+    font-weight: bold;
+  }
+  
+  .calendar-day-cell {
+    flex: 1;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  
+  .calendar-day-cell.empty {
+    background-color: transparent;
+  }
+  
+  .calendar-day-cell.today {
+    border: 2px solid #4e73df;
+  }
+  
+  .calendar-day-cell .day-tooltip {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 0.7rem;
+    background-color: rgba(0,0,0,0.5);
+    color: white;
+    border-radius: 2px;
+    padding: 0 2px;
+    display: none;
+  }
+  
+  .calendar-day-cell:hover .day-tooltip {
+    display: block;
+  }
+  
+  .calendar-day-cell.intensity-none {
+    background-color: #f8f9fc;
+    color: #858796;
+  }
+  
+  .calendar-day-cell.intensity-low {
+    background-color: #d1e7dd;
+  }
+  
+  .calendar-day-cell.intensity-medium {
+    background-color: #75c991;
+    color: white;
+  }
+  
+  .calendar-day-cell.intensity-high {
+    background-color: #3fa95d;
+    color: white;
+  }
+  
+  .calendar-day-cell.intensity-very-high {
+    background-color: #20703d;
+    color: white;
+  }
+  
+  /* 学习强度图例样式 */
+  .calendar-intensity-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+  }
+  
+  .intensity-none {
+    background-color: #f8f9fc;
+    border: 1px solid #e3e6f0;
+  }
+  
+  .intensity-low {
+    background-color: #d1e7dd;
+  }
+  
+  .intensity-medium {
+    background-color: #75c991;
+  }
+  
+  .intensity-high {
+    background-color: #3fa95d;
+  }
+  
+  .intensity-very-high {
+    background-color: #20703d;
+  }
+</style>
+{% endblock %}

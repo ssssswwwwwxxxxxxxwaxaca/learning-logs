@@ -1,0 +1,517 @@
+{% extends 'learning_logs/base.html' %}
+{% load static %}
+{% load analytics_extras %}
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h2 mb-0">学习进度报告</h1>
+    <p class="text-muted">查看您的学习进度和目标完成情况</p>
+  </div>
+  <div>
+    <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i>返回仪表板
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 总览卡片 -->
+<div class="row g-4 mb-4">
+  <!-- 主题总数 -->
+  <div class="col-md-3">
+    <div class="card border-left-primary shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">主题总数</div>
+            <div class="h5 mb-0 font-weight-bold">{{ topics|length }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-book fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 条目总数 -->
+  <div class="col-md-3">
+    <div class="card border-left-success shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">笔记条目总数</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {% if total_entries %}
+                {{ total_entries }}
+              {% else %}
+                0
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-sticky-note fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 目标完成率 -->
+  <div class="col-md-3">
+    <div class="card border-left-warning shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">目标完成率</div>
+            <div class="row no-gutters align-items-center">
+              <div class="col-auto">
+                <div class="h5 mb-0 me-2 font-weight-bold">{{ goal_completion_rate|floatformat:0 }}%</div>
+              </div>
+              <div class="col">
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-warning" role="progressbar" style="width: {{ goal_completion_rate }}%"
+                    aria-valuenow="{{ goal_completion_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 最近更新 -->
+  <div class="col-md-3">
+    <div class="card border-left-info shadow h-100">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">最近更新</div>
+            <div class="h5 mb-0 font-weight-bold">
+              {% if last_activity %}
+                {{ last_activity|date:"Y-m-d" }}
+              {% else %}
+                暂无记录
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 主题进度 -->
+<div class="card shadow mb-4">
+  <div class="card-header py-3 d-flex justify-content-between align-items-center">
+    <h6 class="m-0 font-weight-bold text-primary">主题学习进度</h6>
+    <div class="dropdown">
+      <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        排序
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+        <li><a class="dropdown-item" href="?sort=name">按名称</a></li>
+        <li><a class="dropdown-item" href="?sort=recent">最近更新</a></li>
+        <li><a class="dropdown-item" href="?sort=entries">条目数量</a></li>
+        <li><a class="dropdown-item" href="?sort=time">学习时间</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>主题</th>
+            <th>条目数</th>
+            <th>最后更新</th>
+            <th>总学习时间</th>
+            <th>学习频率</th>
+            <th>进度</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for topic in topics %}
+          <tr>
+            <td>
+              <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic.text }}</a>
+            </td>
+            <td>
+              {{ topic.entry_count }}
+            </td>
+            <td>
+              {% if topic.analytics.last_studied %}
+                {{ topic.analytics.last_studied|date:"Y-m-d" }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if topic.analytics.total_study_time %}
+                {{ topic.analytics.total_study_time.total_seconds|floatformat:0|divided_by:60|default:"0" }} 分钟
+              {% else %}
+                0 分钟
+              {% endif %}
+            </td>
+            <td>
+              {% if topic.analytics.study_frequency %}
+                <span class="badge 
+                  {% if topic.analytics.get_study_frequency == 'Very High' %}bg-success
+                  {% elif topic.analytics.get_study_frequency == 'High' %}bg-primary
+                  {% elif topic.analytics.get_study_frequency == 'Moderate' %}bg-info
+                  {% elif topic.analytics.get_study_frequency == 'Low' %}bg-warning
+                  {% else %}bg-danger{% endif %}">
+                  {{ topic.analytics.get_study_frequency }}
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">无数据</span>
+              {% endif %}
+            </td>
+            <td style="width: 15%;">
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" 
+                  style="width: {% if topic.progress %}{{ topic.progress }}{% else %}0{% endif %}%" 
+                  aria-valuenow="{% if topic.progress %}{{ topic.progress }}{% else %}0{% endif %}" 
+                  aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </td>
+            <td>
+              <a href="{% url 'analytics:topic_analysis' topic.id %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-chart-line"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4">
+              <p class="text-muted mb-0">暂无主题</p>
+              <a href="{% url 'learning_logs:new_topic' %}" class="btn btn-sm btn-primary mt-2">
+                创建主题
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 学习目标 -->
+<div class="row g-4">
+  <!-- 进行中目标 -->
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">进行中的学习目标</h6>
+      </div>
+      <div class="card-body">
+        {% if active_goals %}
+          {% for goal in active_goals %}
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+              <h6 class="mb-0">{{ goal.text }}</h6>
+              <small class="text-muted">
+                目标日期: {{ goal.target_date|date:"Y-m-d" }}
+                {% if goal.target_date|date:"U"|add:"0" < today|date:"U"|add:"0" %}
+                <span class="text-danger">(已逾期)</span>
+                {% endif %}
+              </small>
+            </div>
+            <div>
+              <a href="{% url 'learning_logs:toggle_goal' goal.id %}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-check-circle"></i> 标记完成
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">暂无进行中的目标</p>
+            <a href="{% url 'learning_logs:goals' %}" class="btn btn-sm btn-primary mt-2">
+              创建学习目标
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 已完成目标 -->
+  <div class="col-lg-6">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-success">已完成的学习目标</h6>
+      </div>
+      <div class="card-body">
+        {% if completed_goals %}
+          {% for goal in completed_goals|slice:":5" %}
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+              <h6 class="mb-0 text-decoration-line-through">{{ goal.text }}</h6>
+              <small class="text-muted">
+                完成日期: {{ goal.completed_date|date:"Y-m-d" }}
+              </small>
+            </div>
+            <div>
+              <span class="badge bg-success">
+                <i class="fas fa-check me-1"></i> 已完成
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+          
+          {% if completed_goals.count > 5 %}
+          <div class="text-center mt-3">
+            <a href="{% url 'learning_logs:goals' %}" class="btn btn-sm btn-outline-success">
+              查看全部 {{ completed_goals.count }} 个已完成目标
+            </a>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">暂无已完成的目标</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 学习报告 -->
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+    <h6 class="m-0 font-weight-bold text-primary">最近学习报告</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>报告名称</th>
+            <th>类型</th>
+            <th>时间范围</th>
+            <th>学习时间</th>
+            <th>涉及主题</th>
+            <th>新增条目</th>
+            <th>完成目标</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for report in recent_reports %}
+          <tr>
+            <td>{{ report.title }}</td>
+            <td><span class="badge bg-info">{{ report.get_report_type_display }}</span></td>
+            <td>{{ report.period_start|date:"m/d" }} - {{ report.period_end|date:"m/d" }}</td>
+            <td>{{ report.get_study_time_hours }} 小时</td>
+            <td>{{ report.topics_covered }}</td>
+            <td>{{ report.entries_created }}</td>
+            <td>{{ report.goals_completed }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary view-report" data-id="{{ report.id }}" data-bs-toggle="modal" data-bs-target="#reportModal">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-3">
+              <p class="text-muted mb-0">暂无学习报告</p>
+              <small>报告将在您有足够的学习数据后自动生成</small>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 报告详情模态框 -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">学习报告详情</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="report-content">
+          <div class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">加载中...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary" id="download-report">
+          <i class="fas fa-download me-2"></i>下载报告
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 查看报告详情
+    document.querySelectorAll('.view-report').forEach(button => {
+      button.addEventListener('click', function() {
+        const reportId = this.getAttribute('data-id');
+        const reportContent = document.getElementById('report-content');
+        
+        // 显示加载状态
+        reportContent.innerHTML = `
+          <div class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">加载中...</span>
+            </div>
+          </div>
+        `;
+        
+        // 加载报告详情
+        fetch(`/analytics/api/report/${reportId}/`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('获取报告失败');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // 更新模态框内容
+            reportContent.innerHTML = `
+              <h4>${data.title}</h4>
+              <p class="text-muted">
+                ${data.period_start} 至 ${data.period_end}
+                <span class="badge bg-info ms-2">${data.report_type_display}</span>
+              </p>
+              <hr>
+              
+              <div class="row mb-4">
+                <div class="col-md-3 text-center">
+                  <div class="h4">${data.study_time_hours}h</div>
+                  <div class="text-muted">学习时间</div>
+                </div>
+                <div class="col-md-3 text-center">
+                  <div class="h4">${data.topics_covered}</div>
+                  <div class="text-muted">涉及主题</div>
+                </div>
+                <div class="col-md-3 text-center">
+                  <div class="h4">${data.entries_created}</div>
+                  <div class="text-muted">新增条目</div>
+                </div>
+                <div class="col-md-3 text-center">
+                  <div class="h4">${data.goals_completed}</div>
+                  <div class="text-muted">完成目标</div>
+                </div>
+              </div>
+              
+              <h5>学习摘要</h5>
+              <p>${data.summary}</p>
+              
+              <h5>主题分布</h5>
+              <div class="chart-container" style="position: relative; height:200px;">
+                <canvas id="topicDistChart"></canvas>
+              </div>
+            `;
+            
+            // 如果有图表数据，初始化图表
+            if (data.chart_data && data.chart_data.topics) {
+              const ctx = document.getElementById('topicDistChart');
+              new Chart(ctx, {
+                type: 'pie',
+                data: {
+                  labels: data.chart_data.topics.labels,
+                  datasets: [{
+                    data: data.chart_data.topics.data,
+                    backgroundColor: [
+                      'rgba(255, 99, 132, 0.2)',
+                      'rgba(54, 162, 235, 0.2)',
+                      'rgba(255, 206, 86, 0.2)',
+                      'rgba(75, 192, 192, 0.2)',
+                      'rgba(153, 102, 255, 0.2)',
+                      'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                      'rgba(255, 99, 132, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 206, 86, 1)',
+                      'rgba(75, 192, 192, 1)',
+                      'rgba(153, 102, 255, 1)',
+                      'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'bottom'
+                    }
+                  }
+                }
+              });
+            }
+          })
+          .catch(error => {
+            reportContent.innerHTML = `
+              <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${error.message}
+              </div>
+            `;
+          });
+      });
+    });
+    
+    // 下载报告功能
+    document.getElementById('download-report').addEventListener('click', function() {
+      // 实现报告下载逻辑
+      alert('报告下载功能即将推出');
+    });
+  });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .border-left-primary {
+    border-left: 4px solid #4e73df !important;
+  }
+  
+  .border-left-success {
+    border-left: 4px solid #1cc88a !important;
+  }
+  
+  .border-left-info {
+    border-left: 4px solid #36b9cc !important;
+  }
+  
+  .border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+  }
+  
+  .progress {
+    height: 8px;
+  }
+  
+  .text-xs {
+    font-size: .7rem;
+  }
+</style>
+{% endblock %}
