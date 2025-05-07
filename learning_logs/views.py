@@ -587,7 +587,7 @@ def ai_assistant(request, topic_id):
                     success_message = "测验题生成成功!"
                     title = "测验题"
                     
-                elif feature_type == 'recommendations':
+                elif feature_type == 'recommendation':
                     result = client.get_learning_recommendations(topic.text, entries_text)
                     interaction_type = 'recommendation'
                     question = f"为主题'{topic.text}'提供学习建议"
